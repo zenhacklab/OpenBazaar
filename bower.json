@@ -1,0 +1,31 @@
+{
+  "name": "OpenBazaar-Latrasis",
+  "version": "0.0.1",
+  "homepage": "?",
+  "authors": [
+    "Latrasis <jacobapayne@gmail.com>"
+  ],
+  "description": "OpenBazaar",
+  "main": "index.html",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "OpenBazaar"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap":"*",
+    "angular-route": "*",
+    "jquery": "*"
+  }
+}
