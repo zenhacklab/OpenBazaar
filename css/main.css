@@ -6,7 +6,7 @@ header {
 }
 
 body { 
-	padding-top: 115px;
+
 }
 
 /* NavBar Customization*/
@@ -26,8 +26,14 @@ nav a.side-link {
 	position: relative;
 }
 
+nav.navbar-collapse {
+	background-color: blue;
+}
+
 /* Jumbotron Customization */
 
 .jumbotron {
 	padding-bottom: 100px;
+	padding-top: 170px;
 }
+

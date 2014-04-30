@@ -27,9 +27,25 @@ app.run(['$location', '$rootScope', function($location, $rootScope) {
 app.controller('mainController', function($scope) {
 	$scope.page = {
 		title: "OpenBazaar"
-	},
+	};
 	$scope.url = {
 		url1: "Hello"
 	};
-	
 });
+
+//Directive + jQuery to collapse the navbar on scroll
+app.directive('navbarScroll', function(){
+	return {
+		restrict: 'C',
+		link: function($scope,element) {
+			$(window).scroll(function() {
+				if (element.offset().top > 50) {
+					element.addClass("navbar-collapse");
+				} else {
+					element.removeClass("navbar-collapse");
+				}
+			});
+		}
+	};
+});
+
