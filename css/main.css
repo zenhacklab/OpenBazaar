@@ -71,5 +71,15 @@ section.cust-and-merchant ul {
 	padding-top: 20px;
 }
 
+/* Screenshots */
+
+section.screenshots {
+	background-color: #fff;
+}
+
+section.screenshots #screenshot {
+	width:auto;
+	height:auto;
+}
 
 
