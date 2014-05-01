@@ -34,13 +34,23 @@ nav.navbar-collapse {
 
 .jumbotron {
 	padding-bottom: 100px;
-	padding-top: 170px;
+	padding-top: 100px;
 	margin-bottom: 0;
+}
+
+.jumbotron.front-page {
+	padding-top: 170px;
+}
+
+/* QA Jumbotrons */
+
+section.question-why {
+	background-color: #ccc;
 }
 
 /* Property Listing */
 section.property-list {
-	padding: 30px 0;
+	padding: 50px 0 30px;
 }
 
 section.property-list .row {
@@ -51,6 +61,14 @@ section.property-list .thumbnail {
 	border:none;
 	box-shadow: none;
 	text-align: center;
+}
+
+/* Customer and Merchant Features */
+
+section.cust-and-merchant ul {
+	list-style-type: none;
+	padding-left: 0;
+	padding-top: 20px;
 }
 
 
