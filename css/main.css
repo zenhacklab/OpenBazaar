@@ -14,7 +14,24 @@ body {
 nav.navbar.navbar-default {
 	background: none;
 	box-shadow: none;
-	padding: 40px 0px 20px;
+	padding: 60px 0px 20px;
+	border-bottom: none;
+	-webkit-transition: ease-out 0.4s;
+	-moz-transition: ease-out 0.4s;
+	-ms-transition: ease-out 0.4s;
+	-o-transition: ease-out 0.4s;
+	transition: ease-out 0.4s;
+}
+
+/* Navbar Animation */
+nav.navbar.navbar-default.navbar-collapse {
+	background-color: white;
+	padding: 20px 0 20px;
+	-webkit-transition: ease-in 0.4s;
+	-moz-transition: ease-in 0.4s;
+	-ms-transition: ease-in 0.4s;
+	-o-transition: ease-in 0.4s;
+	transition: ease-in 0.4s;
 }
 
 nav a.main-logo {
@@ -26,9 +43,6 @@ nav a.side-link {
 	position: relative;
 }
 
-nav.navbar-collapse {
-	background-color: blue;
-}
 
 /* Jumbotron Customization */
 
@@ -82,6 +96,13 @@ section.screenshots #screenshot {
 	height:auto;
 }
 
+/* Downloads */
+
+section.downloads .thumbnail {
+	background-color: transparent;
+	border:none;
+	box-shadow: none;
+}
 /*Footer*/
 
 footer {
