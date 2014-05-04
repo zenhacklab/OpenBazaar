@@ -34,7 +34,7 @@
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
 				<a class="navbar-brand main-logo" href="#">
-					<img src="img/logo.svg">{{ page.title }}<img>
+					<img src="img/logo_large.png" alt="OpenBazaar" id="main-logo"><img>
 				</a>
 			</div>
 			<p class="nav navbar-text navbar-right">
@@ -198,43 +198,51 @@
 				</div>
 			</div>
 		</section>
-		<section class="jumbotron downloads text-center">
+		<section class="jumbotron downloads text-center" ng-controller="downloadController">
 			<div class="container">
 				<div class="row">
 					<div class="col-md-4">
 						<div class="thumbnail">
-							<i class="fa fa-linux fa-5x"></i>
 							<div class="caption">
-								<h2>Download the Alpha</h2>
-								<button type="button" class="btn btn-default">Download Alpha</button>
+								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.linux() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ version }}</h4>
+									<span class="download-info">
+										<i class="fa fa-linux fa-2x"></i>
+										<p>For Linux 32-bit and 64-bit</p>
+									</span>
+								</button>
 							</div>
 						</div>
 					</div>
 					<div class="col-md-4">
-						<div class="thumbnail">
-							<i class="fa fa-apple fa-5x"></i>
+						<div class="thumbnail" downloadlink>
 							<div class="caption">
-								<h2>Download the Alpha</h2>
-								<button type="button" class="btn btn-default">Download Alpha</button>
+								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.apple() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ version }}</h4>
+									<span class="download-info">
+										<i class="fa fa-apple fa-2x"></i>
+										<p>For MacOSX 10.6+</p>
+									</span>
+								</button>
 							</div>
 						</div>
 					</div>
 					<div class="col-md-4">
-						<div class="thumbnail">
-							<i class="fa fa-windows fa-5x"></i>
+						<div class="thumbnail" downloadlink>
 							<div class="caption">
-								<h2>Download the Alpha</h2>
-								<button type="button" class="btn btn-default">Download Alpha</button>
+								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ version }}</h4>
+									<span class="download-info">
+										<i class="fa fa-windows fa-2x"></i>
+										<p>For Windows 7+</p>
+									</span>
+								</button>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</section>
-
-		<main ng-view>
-		</main>
-
+		</section >
 		<footer>
 			<div class="container">
 				<div class="row">

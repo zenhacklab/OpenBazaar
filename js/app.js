@@ -9,7 +9,6 @@ app.config(['$routeProvider','$locationProvider',
 	function($routeProvider,$locationProvider) {
 		$routeProvider
 			.when('/',{
-				templateUrl:'partials/home.html',
 				controller:'mainController',
 				title:"OpenBazaar"
 			});
@@ -18,27 +17,55 @@ app.config(['$routeProvider','$locationProvider',
 		$locationProvider.html5Mode(true);
 }]);
 
-app.controller('mainController',function($scope) {
-	$scope.page = {
-		title: "OpenBazaar"
+app.controller('mainController', function(){});
+
+app.controller('downloadController', function($scope,OSdetect) {
+
+	var $linux = {
+			ftype: 'application/x-gzip',
+			download : 'file.gzip'
+		},
+		$apple = {
+			ftype: 'application/x-gzip',
+			download : 'file.gzip'
+		},
+		$win = {
+			ftype: 'application/x-gzip',
+			download : 'file.gzip'
+		};
+	$scope.currentos = "Alpha 1.2";
+	$scope.currentos = OSdetect.name();
+	$scope.download = {
+
+		linux : function() {
+			var blob = new Blob([$linux.download], { type: $linux.ftype });
+			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+			return downloadUrl;
+		},
+		apple : function() {
+			var blob = new Blob([$apple.download], { type: $apple.ftype });
+			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+			return downloadUrl;
+			},
+		win : function() {
+			var blob = new Blob([$win.download], { type: $win.ftype });
+			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+			return downloadUrl;
+		}
 	};
-	$scope.url = {
-		url1: "Hello"
-	};
-	$scope.Osfind = OSdetect;
 });
 
 // OS Detector Factory
-function OSdetect() {
+app.service('OSdetect', function(){
 	this.name = function() {
-		var OSname = "Unknown OS";
-		if (navigator.appVersion.indexOf("Win")!=-1) OSName="Windows";
-		if (navigator.appVersion.indexOf("Mac")!=-1) OSName="MacOS";
-		if (navigator.appVersion.indexOf("X11")!=-1) OSName="UNIX";
-		if (navigator.appVersion.indexOf("Linux")!=-1) OSName="Linux";
+		var OSname = "?";
+		if (navigator.appVersion.indexOf("Win")!=-1) OSname="windows";
+		if (navigator.appVersion.indexOf("Mac")!=-1) OSname="apple";
+		if (navigator.appVersion.indexOf("X11")!=-1) OSname="windows";
+		if (navigator.appVersion.indexOf("Linux")!=-1) OSname="linux";
 		return OSname;
 	};
-}
+});
 
 //Directive + jQuery to collapse the navbar on scroll
 app.directive('navbarScroll', function(){
