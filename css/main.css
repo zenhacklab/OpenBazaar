@@ -6,7 +6,6 @@ header {
 }
 
 body { 
-
 }
 
 /* NavBar Customization*/
@@ -14,7 +13,7 @@ body {
 nav.navbar.navbar-default {
 	background: none;
 	box-shadow: none;
-	padding: 60px 0px 20px;
+	padding: 60px 0px 80px;
 	border-bottom: none;
 	-webkit-transition: ease-out 0.4s;
 	-moz-transition: ease-out 0.4s;
@@ -23,10 +22,13 @@ nav.navbar.navbar-default {
 	transition: ease-out 0.4s;
 }
 
-/* Navbar Animation */
-nav.navbar.navbar-default.navbar-collapse {
-	background-color: white;
-	padding: 20px 0 20px;
+nav a.main-logo {
+	font-size: 2em;
+	margin-top: -40px;
+}
+
+nav #main-logo {
+	width:300px;
 	-webkit-transition: ease-in 0.4s;
 	-moz-transition: ease-in 0.4s;
 	-ms-transition: ease-in 0.4s;
@@ -34,13 +36,19 @@ nav.navbar.navbar-default.navbar-collapse {
 	transition: ease-in 0.4s;
 }
 
-nav a.main-logo {
-	font-size: 2em;
-}
-
 nav a.side-link {
 	font-size: 1.2em;
 	position: relative;
+}
+
+/* Navbar Animation */
+nav.navbar.navbar-default.navbar-collapse {
+	background-color: white;
+	padding: 20px 0 20px;
+}
+
+nav.navbar-collapse #main-logo {
+	margin-top: -45px;
 }
 
 
@@ -53,7 +61,7 @@ nav a.side-link {
 }
 
 .jumbotron.front-page {
-	padding-top: 170px;
+	padding-top: 200px;
 }
 
 /* QA Jumbotrons */
@@ -93,6 +101,7 @@ section.screenshots {
 
 section.screenshots #screenshot {
 	width:auto;
+	max-width: 100%;
 	height:auto;
 }
 
@@ -103,6 +112,29 @@ section.downloads .thumbnail {
 	border:none;
 	box-shadow: none;
 }
+
+section.downloads .caption button{
+	padding:10px 20px 0px;
+	opacity:0.4;
+}
+
+section.downloads button p,
+section.downloads button i {
+	display: inline-block;
+}
+
+section.downloads button p {
+	font-size: 1.2em;
+	margin-left: 0.2em;
+	position: relative;
+	bottom: 2px;
+}
+
+section.downloads button.highlight {
+	opacity:1;
+	background-image: none;
+}
+
 /*Footer*/
 
 footer {

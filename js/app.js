@@ -9,7 +9,6 @@ app.config(['$routeProvider','$locationProvider',
 	function($routeProvider,$locationProvider) {
 		$routeProvider
 			.when('/',{
-				templateUrl:'partials/home.html',
 				controller:'mainController',
 				title:"OpenBazaar"
 			});
@@ -18,27 +17,48 @@ app.config(['$routeProvider','$locationProvider',
 		$locationProvider.html5Mode(true);
 }]);
 
-app.controller('mainController',function($scope) {
-	$scope.page = {
-		title: "OpenBazaar"
+app.controller('mainController', function(){});
+
+app.controller('downloadController', function($scope,OSdetect) {
+
+	$scope.currentos = OSdetect.name();
+	$scope.appversion = "Alpha 1.2";
+
+	$scope.linux = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$linux.download], { type: $linux.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
 	};
-	$scope.url = {
-		url1: "Hello"
+
+	$scope.apple = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$apple.download], { type: $apple.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
 	};
-	$scope.Osfind = OSdetect;
+	$scope.windows = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$win.download], { type: $win.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
+	};
 });
 
 // OS Detector Factory
-function OSdetect() {
+app.service('OSdetect', function(){
 	this.name = function() {
-		var OSname = "Unknown OS";
-		if (navigator.appVersion.indexOf("Win")!=-1) OSName="Windows";
-		if (navigator.appVersion.indexOf("Mac")!=-1) OSName="MacOS";
-		if (navigator.appVersion.indexOf("X11")!=-1) OSName="UNIX";
-		if (navigator.appVersion.indexOf("Linux")!=-1) OSName="Linux";
+		var OSname = "?";
+		if (navigator.appVersion.indexOf("Win")!=-1) OSname="windows";
+		if (navigator.appVersion.indexOf("Mac")!=-1) OSname="apple";
+		if (navigator.appVersion.indexOf("X11")!=-1) OSname="windows";
+		if (navigator.appVersion.indexOf("Linux")!=-1) OSname="linux";
 		return OSname;
 	};
-}
+});
 
 //Directive + jQuery to collapse the navbar on scroll
 app.directive('navbarScroll', function(){
@@ -70,5 +90,42 @@ app.directive('windowHeight', function(){
 		}
 	};
 });
+
+//Directive + jQuery Detect and Hide Other OS Download Links
+app.directive('osHighlight', function(){
+	return {
+		restrict: 'AC',
+		controller: 'downloadController',
+		link: function($scope,element,attrs) {
+			// Check and Hide other OS but Current One
+			attrs.$observe('osHighlight', function(value) {
+				if (value == $scope.currentos) {
+					element.addClass('highlight');
+				}
+			});
+		}
+	};
+});
+
+//Directive + jQuery Add Top Download Link with Responsive os link.
+app.directive('downloadTop', function(){
+	return {
+		restrict: 'A',
+		controller: 'downloadController',
+		link: function($scope,element,attrs) {
+			// Check and Hide other OS but Current One
+			var os = $scope.currentos;
+
+			if (os == "windows"){fn = $scope.windows();}
+			if (os == "apple"){fn = $scope.apple();}
+			if (os == "linux"){fn = $scope.linux();}
+
+			attrs.$set('download', fn.download);
+			attrs.$set('ngHref', fn.url);
+		}
+	};
+});
+
+
 
 

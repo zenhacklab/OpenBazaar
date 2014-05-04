@@ -1,269 +1,279 @@
 <!DOCTYPE html>
 <html ng-app="app">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>OpenBazzar</title>
-        <meta name="description" content="Open Bazaar">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>OpenBazzar</title>
+		<meta name="description" content="Open Bazaar">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
 
-        <!-- Vendor CSS -->
-        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
-        <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css" >
+		<!-- Vendor CSS -->
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css" >
 
-        <!-- Custom CSS -->
-        <link rel="stylesheet" href="css/main.css">
-        
-        <!-- Vendor JS -->
-        <script src="bower_components/angular/angular.min.js"></script>
-        <script src="bower_components/angular-route/angular-route.min.js"></script>
-        <script src="bower_components/jquery/dist/jquery.min.js"></script>
-        
-        <!-- Angular JS -->
-        <script src="js/app.js"></script>
+		<!-- Custom CSS -->
+		<link rel="stylesheet" href="css/main.css">
+		
+		<!-- Vendor JS -->
+		<script src="bower_components/angular/angular.min.js"></script>
+		<script src="bower_components/angular-route/angular-route.min.js"></script>
+		<script src="bower_components/jquery/dist/jquery.min.js"></script>
+		
+		<!-- Angular JS -->
+		<script src="js/app.js"></script>
 
-        <base href="/">
+		<base href="/">
 
 
-    </head>
-    <body ng-controller="mainController">
-        <nav class="navbar navbar-default navbar-fixed-top navbar-scroll" role="navigation">
-          <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-              <a class="navbar-brand main-logo" href="#">{{ page.title }}</a>
-            </div>
-            <p class="nav navbar-text navbar-right">
-              <a href="#" class="navbar-link side-link">Download</a>
-            </p>
-          </div><!-- /.container-fluid -->
-        </nav>
-        
-        <div class="jumbotron front-page window-height">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 text-left">
-                        <h1>The First Decentralized Online Marketplace</h1>
-                        <a href="">Learn More</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <section class="property-list">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property1.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Blockchain Based</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property2.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Decentralized Hosting</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property3.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Private and Open</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+	</head>
+	<body ng-controller="mainController">
+		<nav class="navbar navbar-default navbar-fixed-top navbar-scroll" role="navigation">
+		  <div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<a class="navbar-brand main-logo" href="#">
+					<img src="img/logo_large.png" alt="OpenBazaar" id="main-logo"><img>
+				</a>
+			</div>
+			<p class="nav navbar-text navbar-right">
+				<a href="#" class="navbar-link side-link" download-top target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">Download</a>
+			</p>
+		  </div><!-- /.container-fluid -->
+		</nav>
+		
+		<div class="jumbotron front-page window-height">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-8 text-left">
+						<h1>The First Decentralized Online Marketplace</h1>
+						<a href="">Learn More</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<section class="property-list">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property1.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Blockchain Based</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property2.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Decentralized Hosting</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property3.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Private and Open</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+				</div>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property1.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Blockchain Based</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property2.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Decentralized Hosting</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <img src="img/property3.png" alt="Some Picture">
-                            <div class="caption">
-                                <h3>Private and Open</h3>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            
-            </div>
-        </section>
-        <section class="jumbotron question-how">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 text-left">
-                        <h2>So...Amazon?</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tempore, quam, similique, tempora ut eveniet ullam eius quo cupiditate vero minus animi placeat sit maiores cumque laborum possimus culpa! Dolorum, corporis.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="jumbotron question-why">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 col-md-offset-4 text-left">
-                        <h2>Why?</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tempore, quam, similique, tempora ut eveniet ullam eius quo cupiditate vero minus animi placeat sit maiores cumque laborum possimus culpa! Dolorum, corporis.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="jumbotron cust-and-merchant">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h2>Customer</h2>
-                        <ul class="featurelist">
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <h2>Merchant</h2>
-                        <ul class="featurelist">
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                            <li>
-                                <h4>Feature</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="jumbotron screenshots">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4 text-left">
-                        <h2>Screenshots</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                    <div class="col-md-6 col-md-offset-2">
-                        <img src="http://placehold.it/600x300" alt="" id="screenshot">
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="jumbotron downloads text-center">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <i class="fa fa-linux fa-5x"></i>
-                            <div class="caption">
-                                <h2>Download the Alpha</h2>
-                                <button type="button" class="btn btn-default">Download Alpha</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <i class="fa fa-apple fa-5x"></i>
-                            <div class="caption">
-                                <h2>Download the Alpha</h2>
-                                <button type="button" class="btn btn-default">Download Alpha</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="thumbnail">
-                            <i class="fa fa-windows fa-5x"></i>
-                            <div class="caption">
-                                <h2>Download the Alpha</h2>
-                                <button type="button" class="btn btn-default">Download Alpha</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+				<div class="row">
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property1.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Blockchain Based</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property2.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Decentralized Hosting</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<img src="img/property3.png" alt="Some Picture">
+							<div class="caption">
+								<h3>Private and Open</h3>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			
+			</div>
+		</section>
+		<section class="jumbotron question-how">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-8 text-left">
+						<h2>So...Amazon?</h2>
+						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tempore, quam, similique, tempora ut eveniet ullam eius quo cupiditate vero minus animi placeat sit maiores cumque laborum possimus culpa! Dolorum, corporis.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="jumbotron question-why">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-8 col-md-offset-4 text-left">
+						<h2>Why?</h2>
+						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tempore, quam, similique, tempora ut eveniet ullam eius quo cupiditate vero minus animi placeat sit maiores cumque laborum possimus culpa! Dolorum, corporis.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="jumbotron cust-and-merchant">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-4">
+						<h2>Customer</h2>
+						<ul class="featurelist">
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+						</ul>
+					</div>
+					<div class="col-md-4">
+						<h2>Merchant</h2>
+						<ul class="featurelist">
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+							<li>
+								<h4>Feature</h4>
+								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="jumbotron screenshots">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-4 text-left">
+						<h2>Screenshots</h2>
+						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+					</div>
+					<div class="col-md-6 col-md-offset-2">
+						<img src="http://placehold.it/600x300" alt="" id="screenshot">
+					</div>
+				</div>
+			</div>
+		</section>
+		<section class="jumbotron downloads text-center" ng-controller="downloadController">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<div class="caption">
+								<button type="button" class="btn btn-default" data-os-highlight="linux" target="_self" download="{{ linux().download }}" ng-href="{{ linux().url }}" download-app>
+									<h4>Download OpenBazaar {{ appversion }}</h4>
+									<span class="download-info">
+										<i class="fa fa-linux fa-2x"></i>
+										<p>For Linux 32-bit and 64-bit</p>
+									</span>
+								</button>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<div class="caption">
+								<button type="button" class="btn btn-default" data-os-highlight="apple" target="_self" download="{{ apple().download }}" ng-href="{{ apple().url }}" download-app>
+									<h4>Download OpenBazaar {{ appversion }}</h4>
+									<span class="download-info">
+										<i class="fa fa-apple fa-2x"></i>
+										<p>For MacOSX 10.6+</p>
+									</span>
+								</button>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="thumbnail">
+							<div class="caption">
+								<button type="button" class="btn btn-default" data-os-highlight="windows" target="_self" download="{{ windows().download }}" ng-href="{{ windows().url }}" download-app>
+									<h4>Download OpenBazaar {{ appversion }}</h4>
+									<span class="download-info">
+										<i class="fa fa-windows fa-2x"></i>
+										<p>For Windows 7+</p>
+									</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section >
+		<footer>
+			<div class="container">
+				<div class="row">
+					<div class="col-sm-6 col-xs-12">
+						<img class="footer-logo" src="" alt="logo">
+						<p class="copyright">&copy; 2014 OpenBazaar</p>
+					</div>
+					<div class="col-sm-2 col-xs-4">
+						<ul class="link-list">
+						<li class="heading">Contact</li>
+						<li><a href="mailto:hello@storj.io"></a></li>
+						</ul>       
+					</div>
+					<div class="col-sm-2 col-xs-4">
+						<ul class="link-list">
+							<li class="heading">Press</li>
+							<li><a href="http://bitscan.com/articles/genuine-and-decentralized-cloud-storage-storj">BitScan</a></li>
+							<li><a href="http://www.infoworld.com/t/encryption/bitcoin-finally-pays-in-secure-cloud-storage-240386">InfoWorld</a></li>
+							<li><a href="http://www.cryptocoinsnews.com/news/storj-next-generation-cloud-storage-through-the-blockchain/2014/04/11">Cryptocoins News</a></li>
+						</ul>  
+					</div>
+					<div class="col-sm-2 col-xs-4">
+						<ul class="link-list">
+							<li class="heading">Info</li>
+							<li><a href="https://bitcointalk.org/index.php?topic=555159.0">BitcoinTalk Thread</a></li>
+							<li><a href="assets/paper/storj.pdf">Whitepaper</a></li>  
+						</ul>  
+					</div>
+				</div>
+			</div> 
+	  </footer>
 
-        <main ng-view>
-        </main>
-
-        <footer>
-	        <div class="container">
-	            <div class="row">
-	                <div class="col-sm-6 col-xs-12">
-	                    <img class="footer-logo" src="" alt="logo">
-	                    <p class="copyright">&copy; 2014 OpenBazaar</p>
-	                </div>
-	                <div class="col-sm-2 col-xs-4">
-		                <ul class="link-list">
-		                <li class="heading">Contact</li>
-		                <li><a href="mailto:hello@storj.io"></a></li>
-		                </ul>       
-	                </div>
-	                <div class="col-sm-2 col-xs-4">
-		                <ul class="link-list">
-			                <li class="heading">Press</li>
-			                <li><a href="http://bitscan.com/articles/genuine-and-decentralized-cloud-storage-storj">BitScan</a></li>
-			                <li><a href="http://www.infoworld.com/t/encryption/bitcoin-finally-pays-in-secure-cloud-storage-240386">InfoWorld</a></li>
-			                <li><a href="http://www.cryptocoinsnews.com/news/storj-next-generation-cloud-storage-through-the-blockchain/2014/04/11">Cryptocoins News</a></li>
-		                </ul>  
-	                </div>
-	                <div class="col-sm-2 col-xs-4">
-		                <ul class="link-list">
-			                <li class="heading">Info</li>
-			                <li><a href="https://bitcointalk.org/index.php?topic=555159.0">BitcoinTalk Thread</a></li>
-			                <li><a href="assets/paper/storj.pdf">Whitepaper</a></li>  
-		                </ul>  
-	                </div>
-	            </div>
-            </div> 
-      </footer>
-
-    </body>
+	</body>
 </html>
