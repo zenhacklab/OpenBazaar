@@ -204,8 +204,8 @@
 					<div class="col-md-4">
 						<div class="thumbnail">
 							<div class="caption">
-								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.linux() }}" ng-href="{{ download.url }}">
-									<h4>Download OpenBazaar {{ version }}</h4>
+								<button type="button" class="btn btn-default" data-os-highlight="linux" target="_self" download="{{ download.linux() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-linux fa-2x"></i>
 										<p>For Linux 32-bit and 64-bit</p>
@@ -217,8 +217,8 @@
 					<div class="col-md-4">
 						<div class="thumbnail" downloadlink>
 							<div class="caption">
-								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.apple() }}" ng-href="{{ download.url }}">
-									<h4>Download OpenBazaar {{ version }}</h4>
+								<button type="button" class="btn btn-default" data-os-highlight="apple" target="_self" download="{{ download.apple() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-apple fa-2x"></i>
 										<p>For MacOSX 10.6+</p>
@@ -230,8 +230,8 @@
 					<div class="col-md-4">
 						<div class="thumbnail" downloadlink>
 							<div class="caption">
-								<button type="button" class="btn btn-default os-highlight" target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">
-									<h4>Download OpenBazaar {{ version }}</h4>
+								<button type="button" class="btn btn-default" data-os-highlight="windows" target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">
+									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-windows fa-2x"></i>
 										<p>For Windows 7+</p>

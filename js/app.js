@@ -21,6 +21,9 @@ app.controller('mainController', function(){});
 
 app.controller('downloadController', function($scope,OSdetect) {
 
+	$scope.currentos = OSdetect.name();
+	$scope.appversion = "Alpha 1.2";
+
 	var $linux = {
 			ftype: 'application/x-gzip',
 			download : 'file.gzip'
@@ -33,8 +36,7 @@ app.controller('downloadController', function($scope,OSdetect) {
 			ftype: 'application/x-gzip',
 			download : 'file.gzip'
 		};
-	$scope.currentos = "Alpha 1.2";
-	$scope.currentos = OSdetect.name();
+
 	$scope.download = {
 
 		linux : function() {
@@ -97,5 +99,22 @@ app.directive('windowHeight', function(){
 		}
 	};
 });
+
+//Directive + jQuery Detect and Hide Other OS Download Links
+app.directive('osHighlight', function(){
+	return {
+		restrict: 'AC',
+		controller: 'downloadController',
+		link: function($scope,element,attrs) {
+			// Check and Hide other OS but Current One
+			attrs.$observe('osHighlight', function(value) {
+				if (value == $scope.currentos) {
+					element.addClass('highlight');
+				}
+			});
+		}
+	};
+});
+
 
 
