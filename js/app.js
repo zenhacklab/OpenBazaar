@@ -24,36 +24,27 @@ app.controller('downloadController', function($scope,OSdetect) {
 	$scope.currentos = OSdetect.name();
 	$scope.appversion = "Alpha 1.2";
 
-	var $linux = {
-			ftype: 'application/x-gzip',
-			download : 'file.gzip'
-		},
-		$apple = {
-			ftype: 'application/x-gzip',
-			download : 'file.gzip'
-		},
-		$win = {
-			ftype: 'application/x-gzip',
-			download : 'file.gzip'
-		};
+	$scope.linux = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$linux.download], { type: $linux.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
+	};
 
-	$scope.download = {
-
-		linux : function() {
-			var blob = new Blob([$linux.download], { type: $linux.ftype });
-			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
-			return downloadUrl;
-		},
-		apple : function() {
-			var blob = new Blob([$apple.download], { type: $apple.ftype });
-			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
-			return downloadUrl;
-			},
-		win : function() {
-			var blob = new Blob([$win.download], { type: $win.ftype });
-			var downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
-			return downloadUrl;
-		}
+	$scope.apple = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$apple.download], { type: $apple.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
+	};
+	$scope.windows = function() {
+		var ftype = 'application/x-gzip',
+			download = 'file.gzip',
+			blob = new Blob([$win.download], { type: $win.ftype }),
+			downloadUrl = (window.URL || window.webkitURL).createObjectURL( blob );
+		return { url: downloadUrl, download: download };
 	};
 });
 
@@ -115,6 +106,26 @@ app.directive('osHighlight', function(){
 		}
 	};
 });
+
+//Directive + jQuery Add Top Download Link with Responsive os link.
+app.directive('downloadTop', function(){
+	return {
+		restrict: 'A',
+		controller: 'downloadController',
+		link: function($scope,element,attrs) {
+			// Check and Hide other OS but Current One
+			var os = $scope.currentos;
+
+			if (os == "windows"){fn = $scope.windows();}
+			if (os == "apple"){fn = $scope.apple();}
+			if (os == "linux"){fn = $scope.linux();}
+
+			attrs.$set('download', fn.download);
+			attrs.$set('ngHref', fn.url);
+		}
+	};
+});
+
 
 
 

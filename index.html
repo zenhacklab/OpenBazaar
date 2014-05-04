@@ -38,7 +38,7 @@
 				</a>
 			</div>
 			<p class="nav navbar-text navbar-right">
-				<a href="#" class="navbar-link side-link">Download</a>
+				<a href="#" class="navbar-link side-link" download-top target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">Download</a>
 			</p>
 		  </div><!-- /.container-fluid -->
 		</nav>
@@ -204,7 +204,7 @@
 					<div class="col-md-4">
 						<div class="thumbnail">
 							<div class="caption">
-								<button type="button" class="btn btn-default" data-os-highlight="linux" target="_self" download="{{ download.linux() }}" ng-href="{{ download.url }}">
+								<button type="button" class="btn btn-default" data-os-highlight="linux" target="_self" download="{{ linux().download }}" ng-href="{{ linux().url }}" download-app>
 									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-linux fa-2x"></i>
@@ -215,9 +215,9 @@
 						</div>
 					</div>
 					<div class="col-md-4">
-						<div class="thumbnail" downloadlink>
+						<div class="thumbnail">
 							<div class="caption">
-								<button type="button" class="btn btn-default" data-os-highlight="apple" target="_self" download="{{ download.apple() }}" ng-href="{{ download.url }}">
+								<button type="button" class="btn btn-default" data-os-highlight="apple" target="_self" download="{{ apple().download }}" ng-href="{{ apple().url }}" download-app>
 									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-apple fa-2x"></i>
@@ -228,9 +228,9 @@
 						</div>
 					</div>
 					<div class="col-md-4">
-						<div class="thumbnail" downloadlink>
+						<div class="thumbnail">
 							<div class="caption">
-								<button type="button" class="btn btn-default" data-os-highlight="windows" target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">
+								<button type="button" class="btn btn-default" data-os-highlight="windows" target="_self" download="{{ windows().download }}" ng-href="{{ windows().url }}" download-app>
 									<h4>Download OpenBazaar {{ appversion }}</h4>
 									<span class="download-info">
 										<i class="fa fa-windows fa-2x"></i>
