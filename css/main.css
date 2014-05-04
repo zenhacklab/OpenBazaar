@@ -51,6 +51,25 @@ nav.navbar-collapse #main-logo {
 	margin-top: -45px;
 }
 
+/* Responsive Navbar */
+@media (max-width: 768px) {
+
+	/*Center Logo*/
+	.navbar-header,
+	.navbar-brand {
+		float:none;
+		text-align: center;
+	}
+
+	/* Center Front Text */
+	.jumbotron.front-page .text-left{
+		padding-top: 20px;
+		text-align: center;
+	}
+
+}
+
+
 
 /* Jumbotron Customization */
 
