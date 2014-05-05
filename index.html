@@ -31,19 +31,19 @@
 	<body ng-controller="mainController">
 		<nav class="navbar navbar-default navbar-fixed-top navbar-scroll" role="navigation">
 		  <div class="container">
-			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
 				<a class="navbar-brand main-logo" href="#">
-					<img src="img/logo_large.png" alt="OpenBazaar" id="main-logo"><img>
+					<img src="img/logo-alt-b.png" alt="OpenBazaar" id="main-logo"><img>
 				</a>
 			</div>
-			<p class="nav navbar-text navbar-right">
+			<!-- Right Download Link is Hidden on Mobile -->
+			<p class="nav navbar-text navbar-right hidden-xs">
 				<a href="#" class="navbar-link side-link" download-top target="_self" download="{{ download.win() }}" ng-href="{{ download.url }}">Download</a>
 			</p>
-		  </div><!-- /.container-fluid -->
+		  </div>
 		</nav>
 		
-		<div class="jumbotron front-page window-height">
+		<section class="jumbotron front-page window-height">
 			<div class="container">
 				<div class="row">
 					<div class="col-md-8 text-left">
@@ -52,11 +52,11 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 		<section class="property-list">
 			<div class="container">
 				<div class="row">
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4">
 						<div class="thumbnail">
 							<img src="img/property1.png" alt="Some Picture">
 							<div class="caption">
@@ -65,7 +65,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4">
 						<div class="thumbnail">
 							<img src="img/property2.png" alt="Some Picture">
 							<div class="caption">
@@ -74,7 +74,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4">
 						<div class="thumbnail">
 							<img src="img/property3.png" alt="Some Picture">
 							<div class="caption">
@@ -86,7 +86,7 @@
 				</div>
 
 				<div class="row">
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4 hidden-xs">
 						<div class="thumbnail">
 							<img src="img/property1.png" alt="Some Picture">
 							<div class="caption">
@@ -95,7 +95,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4 hidden-xs">
 						<div class="thumbnail">
 							<img src="img/property2.png" alt="Some Picture">
 							<div class="caption">
@@ -104,7 +104,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-4 col-sm-4 hidden-xs">
 						<div class="thumbnail">
 							<img src="img/property3.png" alt="Some Picture">
 							<div class="caption">
@@ -198,7 +198,7 @@
 				</div>
 			</div>
 		</section>
-		<section class="jumbotron downloads text-center" ng-controller="downloadController">
+		<section class="jumbotron downloads text-center hidden-xs" ng-controller="downloadController">
 			<div class="container">
 				<div class="row">
 					<div class="col-md-4">
@@ -247,7 +247,7 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-sm-6 col-xs-12">
-						<img class="footer-logo" src="" alt="logo">
+						<img class="footer-logo" src="img/logo-alt-b.png" alt="logo">
 						<p class="copyright">&copy; 2014 OpenBazaar</p>
 					</div>
 					<div class="col-sm-2 col-xs-4">
@@ -256,7 +256,7 @@
 						<li><a href="mailto:hello@storj.io"></a></li>
 						</ul>       
 					</div>
-					<div class="col-sm-2 col-xs-4">
+					<div class="col-sm-2 col-xs-4 hidden-xs">
 						<ul class="link-list">
 							<li class="heading">Press</li>
 							<li><a href="http://bitscan.com/articles/genuine-and-decentralized-cloud-storage-storj">BitScan</a></li>

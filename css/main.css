@@ -5,15 +5,12 @@ header {
 	background-color: #999;
 }
 
-body { 
-}
-
 /* NavBar Customization*/
 
 nav.navbar.navbar-default {
 	background: none;
 	box-shadow: none;
-	padding: 60px 0px 80px;
+	padding: 60px 0 80px;
 	border-bottom: none;
 	-webkit-transition: ease-out 0.4s;
 	-moz-transition: ease-out 0.4s;
@@ -23,12 +20,13 @@ nav.navbar.navbar-default {
 }
 
 nav a.main-logo {
-	font-size: 2em;
-	margin-top: -40px;
+	margin-top: 10px;
 }
 
 nav #main-logo {
-	width:300px;
+	position: relative;
+	width:500px;
+	margin-left: -40px;
 	-webkit-transition: ease-in 0.4s;
 	-moz-transition: ease-in 0.4s;
 	-ms-transition: ease-in 0.4s;
@@ -49,19 +47,54 @@ nav.navbar.navbar-default.navbar-collapse {
 
 nav.navbar-collapse #main-logo {
 	margin-top: -45px;
+	width:370px;
 }
+
+/* Responsive Navbar */
+@media (max-width: 768px) {
+
+	/*Center Logo*/
+	nav.navbar.navbar-default.navbar-collapse {
+		padding: 0 0 0;
+	}
+	.navbar-brand {
+		float:none;
+		margin-right: 10%;
+		margin-left: 10%;
+	}
+	nav #main-logo { 
+		max-width: 100%;
+		margin-left: -40px;
+		bottom:-10px;
+	}
+
+	nav.navbar-collapse #main-logo {
+		margin-top: 0;
+	}
+
+	/* Center Front Text */
+	section.jumbotron.front-page .text-left{
+		padding-top: 20px;
+		text-align: center;
+	}
+
+}
+
 
 
 /* Jumbotron Customization */
 
-.jumbotron {
+section.jumbotron {
 	padding-bottom: 100px;
 	padding-top: 100px;
 	margin-bottom: 0;
 }
 
-.jumbotron.front-page {
+section.jumbotron.front-page {
 	padding-top: 200px;
+	background-image: url(../img/backgrounds/comps.jpg);
+	background-size: cover;
+	color:white;
 }
 
 /* QA Jumbotrons */
@@ -149,6 +182,14 @@ footer ul.link-list {
 footer ul.link-list li.heading {
 	font-size: 1.5em;
 	margin-bottom: 1ex;
+}
+
+footer img {
+	filter: grayscale(100%);
+	width:300px;
+	opacity: 0.4;
+	margin-top: -20px;
+	margin-left: -30px;
 }
 
 

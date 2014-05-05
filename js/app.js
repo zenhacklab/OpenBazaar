@@ -51,7 +51,7 @@ app.controller('downloadController', function($scope,OSdetect) {
 // OS Detector Factory
 app.service('OSdetect', function(){
 	this.name = function() {
-		var OSname = "?";
+		var OSname = "windows";
 		if (navigator.appVersion.indexOf("Win")!=-1) OSname="windows";
 		if (navigator.appVersion.indexOf("Mac")!=-1) OSname="apple";
 		if (navigator.appVersion.indexOf("X11")!=-1) OSname="windows";
