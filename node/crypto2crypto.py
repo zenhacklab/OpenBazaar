@@ -8,9 +8,8 @@ from protocol import hello_request, hello_response, proto_response_pubkey
 import obelisk
 import logging
 from market import Market
-#from ecdsa import SigningKey,SECP256k1
-#import random
 from obelisk import bitcoin
+from datastore import MongoDataStore
 
 class CryptoPeerConnection(PeerConnection):
 
@@ -60,10 +59,12 @@ class CryptoTransportLayer(TransportLayer):
             self._db.settings.insert({"id":'%s'%market_id, "secret":hexkey, "pubkey":bitcoin.GetPubKey(key._public_key.pubkey, False).encode('hex')})
             self.settings = self._db.settings.find_one({'id':"%s"%market_id})
 
+        # DHT Initialize
+        self._datastore = MongoDataStore()
+
+        
 
 
-#        self.nickname, self.secret, self.pubkey = \
-#            self.load_crypto_details(store_file)
 
         self._log = logging.getLogger(self.__class__.__name__)
 
