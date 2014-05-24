@@ -3,7 +3,7 @@
 *
 * Main App Module
 */
-var dummyapp = angular.module('dummyapp', ['ui.router']);
+var app = angular.module('dummyapp', ['ui.router']);
 
 app.config(['$stateProvider','$urlRouterProvider',
 	function($stateProvider, $urlRouterProvider) {
@@ -18,51 +18,85 @@ app.config(['$stateProvider','$urlRouterProvider',
 						controller: "storepageCntrl"
 					},
 					"option":{
-						templateUrl: "store/storelist.html",
+						templateUrl: "store/listcatalog.html",
 						controller: "storelistCntrl"
 					}
 				},
-				controller:'featuresController',
 				title:"OpenBazaar",
-				currentroute: "front-page"
-			})
-			.state('viewList', {
-				url: "/list",
-				templateUrl: "partials/developer.html",
-				controller:'devController',
-				title:"OpenBazaar | Developer Info",
-				currentroute: "dev-page"
-			})
-			.state('viewUser', {
-				url: "/user",
-				templateUrl: "partials/signup.html",
-				controller:'signupController',
-				title: "OpenBazaar | Sign up",
-				currentroute: "signup-page"
-			})
-			.state('makeAccount', {
-				url: "/account",
-				templateUrl: "partials/login.html",
-				controller:'loginController',
-				title: "OpenBazaar | Login",
-				currentroute: "login-page"
 			});
+
+			//	For Later Use
+			//	
+			//	.state('viewList', {
+			//		url: "",
+			//		view: {
+			//			"main":{
+			//				templateUrl: "store/catalogpage.html",
+			//				controller: "catalogCntrl"
+			//			},
+			//			"option":{
+			//				templateUrl: "store/listrecent.html",
+			//				controller: "userCntrl"
+			//			}
+			//		},
+			//		title:"OpenBazaar",
+			//	})
+			//	.state('viewUser', {
+			//		url: "",
+			//		view: {
+			//			"main":{
+			//				templateUrl: "store/userpage.html",
+			//				controller: "userCntrl"
+			//			},
+			//			"option":{
+			//				templateUrl: "store/userchat.html",
+			//				controller: "chatclientCntrl"
+			//			}
+			//		},
+			//		title:"OpenBazaar",
+			//	})
+			//	.state('makeAccount', {
+			//		url: "",
+			//		view: {
+			//			"main":{
+			//				templateUrl: "store/accountpage.html",
+			//				controller: "storepageCntrl"
+			//			},
+			//			"option":{
+			//				templateUrl: "store/userchat.html",
+			//				controller: "keymakerCntrl"
+			//			}
+			//		},
+			//		title:"OpenBazaar",
+			//	});
 
 }]);
 
 // Controllers 
 
-// Front Page Controller
-app.controller('featuresController', function($scope){});
+// Index Page Controller
+app.controller('indexCntrl', function($scope){});
 
-// Developer Page Controller
-app.controller('devController', function($scope){});
+// Store Page Controller
+app.controller('storepageCntrl', function($scope){});
 
-// Developer Page Controller
-app.controller('signupController', function($scope){});
+// Store List Controller
+app.controller('storelistCntrl', function($scope){});
 
-// Developer Page Controller
-app.controller('loginController', function($scope){});
 
-// Non-working Download Controller (Produces 2 Errors)
-app.controller('downloadsController', function($scope,OSdetect) {
+// Set Wrap Application to 100%
+app.directive('uiWrap',function(){
+	return {
+		restrict: "C",
+		link: function($scope,elem,attrs) {
+			$(window).resize(function() {
+
+				var height = $(window).height();
+				height = height - 15 -$('#top-wrap').height();
+				$(elem).height(height);
+
+			}).resize();
+		}
+	};
+});
+

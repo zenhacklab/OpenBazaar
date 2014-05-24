@@ -1,0 +1,30 @@
+/* DUMMY UI CSS */
+
+/* Main Styles*/
+#top-wrap {
+	margin-bottom: -10px;
+}
+.ui-wrap {
+	width:100%;
+	padding:0 10px;
+	height:auto;
+}
+
+@media (max-width: 780px) {
+	.ui-wrap{
+		visibility: hidden;
+	}
+	.ui-wrap:after {
+		content: "No Mobile Ui (Yet!)";
+		background-color: grey;
+	}
+}
+
+.appview {
+	display: inline-block;
+	position: relative;
+	height: 100%;
+	width:33%;
+	background-color: red;
+	overflow: auto;
+}
