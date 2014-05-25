@@ -5,18 +5,21 @@
 	margin-bottom: -10px;
 }
 .ui-wrap {
-	width:100%;
+	width:100%; 
 	padding:0 10px;
 	height:auto;
+	overflow: hidden;
 }
 
 @media (max-width: 780px) {
 	.ui-wrap{
+		position: absolute;
 		visibility: hidden;
 	}
-	.ui-wrap:after {
+	.ui-wrap:before {
 		content: "No Mobile Ui (Yet!)";
-		background-color: grey;
+		background-color: #666;
+		visibility: visible;
 	}
 }
 
@@ -25,6 +28,16 @@
 	position: relative;
 	height: 100%;
 	width:33%;
-	background-color: red;
 	overflow: auto;
 }
+
+.option::before {float:left;}
+.option::after {float:right;}
+.option::after,.option::before {
+	background: #eee;
+	content: "\a0";
+	height:100%;
+	width:4px;
+}
+
+.option:hover::after,.option:hover::before {cursor: ew-resize;}
