@@ -5,25 +5,26 @@
 */
 var app = angular.module('dummyapp', ['ui.router']);
 
-app.config(['$stateProvider','$urlRouterProvider',
-	function($stateProvider, $urlRouterProvider) {
-		$urlRouterProvider.otherwise("");
-
+app.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('viewStore', {
 				url: "",
-				view: {
+				views: {
 					"main":{
-						templateUrl: "store/storepage.html",
+						templateUrl: "layouts/store/storepage.html",
 						controller: "storepageCntrl"
 					},
 					"option":{
-						templateUrl: "store/listcatalog.html",
-						controller: "storelistCntrl"
+						templateUrl: "layouts/store/listcatalog.html",
+						controller: "storepageCntrl"
+					},
+					"sidenav":{
+						templateUrl: "layouts/nav.html"
 					}
-				},
-				title:"OpenBazaar",
+				}
 			});
+
+			$urlRouterProvider.otherwise("");
 
 			//	For Later Use
 			//	
@@ -70,7 +71,7 @@ app.config(['$stateProvider','$urlRouterProvider',
 			//		title:"OpenBazaar",
 			//	});
 
-}]);
+});
 
 // Controllers 
 
@@ -79,9 +80,6 @@ app.controller('indexCntrl', function($scope){});
 
 // Store Page Controller
 app.controller('storepageCntrl', function($scope){});
-
-// Store List Controller
-app.controller('storelistCntrl', function($scope){});
 
 
 // Set Wrap Application to 100%
@@ -99,4 +97,61 @@ app.directive('uiWrap',function(){
 		}
 	};
 });
+
+
+// app.directive('resizerBar',function($document) {
+// 	return {
+// 		restrict: "A",
+// 		link: function($scope,$element,$attrs) {
+// 			$element.on('mousedown',function(event) {
+// 				event.preventDefault();
+// 				var startX = event.pageX;
+// 				var startY = event.pageY;
+
+// 				$(document).on('mousemove',{startX: startX, startY:startY},mousemove);
+// 				$(document).on('mouseup', mouseup);
+// 			});
+
+// 			function mousemove(event) {
+
+//             if ($attrs.resizerBar == 'vertical') {
+
+// 				// Redifine Start Orientation
+// 				var startX = event.data.startX;
+// 				var startY = event.data.startY;
+
+//                 // Handle vertical resizer
+//                 var x = startX - event.pageX;
+//                 var y = startY - event.pageY;
+
+//                 if ($attrs.resizerMax && Math.abs(x) > $attrs.resizerMax) {
+//                     x = parseInt($attrs.resizerMax, 10);
+//                 }
+
+//                 var currentwidth = $(window).resize(function() {
+// 					return $($attrs.resizerLeft).width();
+// 				}).resize();
+
+//                 $element.css({
+//                     right: x + 'px'
+//                 });
+
+//                 $($attrs.resizerLeft).css({
+//                     width: currentwidth + x + 'px'
+//                 });
+//                 $($attrs.resizerRight).css({
+//                     left: (x + parseInt($attrs.resizerWidth, 10)) + 'px'
+//                 });
+
+//             }
+//         }
+
+//         function mouseup() {
+//             $(document).unbind('mousemove', mousemove);
+//             $(document).unbind('mouseup', mouseup);
+//         }
+
+// 		}
+// 	};
+// });
 

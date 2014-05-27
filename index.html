@@ -29,7 +29,7 @@
 	</head>
 	<body ng-controller="indexCntrl">
 		<header id="top-wrap">
-			<nav class="navbar navbar-default" role="navigation" id="topNav">
+			<nav class="navbar navbar-default" role="navigation" id="topnav">
 				<!-- Brand and toggle get grouped for better mobile display -->
 				<div class="navbar-header">
 					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
@@ -60,8 +60,10 @@
 		</header>
 		<main class="ui-wrap" id="ui-wrap">
 			<div ui-view="main" id="main" class="appview main"></div>
+			<div id="resizer" resizer-bar="vertical" resizer-left="#main" resizer-right="#option" resizer-max="100"></div>
 			<div ui-view="option" id="option" class="appview option"></div>
-			<div ui-view="sidenav" id="sideNav" class="appview sidenav"></div>
+			<div id="resizer" resizer-bar="vertical" resizer-left="#option" resizer-right="#sideNav" resizer-max="100"></div>
+			<div ui-view="sidenav" id="sidenav" class="appview sidenav"></div>
 		</main>
 	</body>
 </html>

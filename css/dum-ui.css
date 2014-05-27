@@ -18,8 +18,8 @@
 	}
 	.ui-wrap:before {
 		content: "No Mobile Ui (Yet!)";
-		background-color: #666;
 		visibility: visible;
+		padding:0 40% 30%;
 	}
 }
 
@@ -27,17 +27,38 @@
 	display: inline-block;
 	position: relative;
 	height: 100%;
+	padding:20px 20px;
 	width:33%;
 	overflow: auto;
 }
 
-.option::before {float:left;}
-.option::after {float:right;}
-.option::after,.option::before {
+#resizer {
+	position: relative;
+	margin:0 -6px;
+	display: inline-block;
 	background: #eee;
-	content: "\a0";
+}
+
+#resizer[resizer-bar="vertical"] {
 	height:100%;
 	width:4px;
 }
 
-.option:hover::after,.option:hover::before {cursor: ew-resize;}
+#resizer[resizer-bar="horizontal"] {
+	width:100%;
+	height:4px;
+}
+
+#resizer:hover {cursor: ew-resize;}
+
+/* App View Customization */
+
+#main {
+	width:50%;
+}
+#option {
+	width:25%;
+}
+#sidenav {
+	width: 25%;
+}
