@@ -1,19 +1,42 @@
 /* DUMMY UI CSS */
 
-/* Main Styles*/
+/* Ui Styles */
+
+/* Upper Nav */
 #top-wrap {
-	margin-bottom: -10px;
+	margin:0;
 }
+
+#topnav {
+	margin-bottom: 0;
+	border-radius: 0;
+	background: none;
+	background-color:#fff; 
+}
+
+#subnav {
+	height:30px;
+	margin-bottom: 0;
+	background: none;
+	border:none;
+	border-radius: 0;
+	border-bottom: 1px solid #ccc;
+	background-color: #fff;
+}
+
+.navbar-subnav {
+	padding: 0 15px;
+}
+.navbar-subnav li {
+	display: inline-block;
+	margin:-0.1ex 5px;
+}
+
 .ui-wrap {
 	width:100%; 
 	padding:0;
 	height:auto;
 	overflow: hidden;
-}
-
-.sub-wrap {
-	width:100%;
-	padding: 0 20px;
 }
 
 @media (max-width: 780px) {
@@ -31,6 +54,7 @@
 .appview {
 	display: inline-block;
 	position: relative;
+	padding: 10px 0;
 	height: 100%;
 	width:32%;
 	overflow: auto;
@@ -38,19 +62,19 @@
 
 #resizer {
 	position: relative;
-	margin:0 -6px;
+	margin:0 -4px;
 	display: inline-block;
-	background: #efefef;
+	background: #ddd;
 }
 
 #resizer[resizer-bar="vertical"] {
 	height:100%;
-	width:4px;
+	width:1px;
 }
 
 #resizer[resizer-bar="horizontal"] {
 	width:100%;
-	height:4px;
+	height:2px;
 }
 
 #resizer:hover {cursor: col-resize;}
@@ -58,11 +82,11 @@
 /* App View Customization */
 
 #main {
-	width:50%;
+	width:55%;
 }
 #option {
-	width:24%;
+	width:24.4%;
 }
 #sidenav {
-	width:25%;
+	width:20%;
 }
