@@ -90,7 +90,7 @@ app.directive('uiWrap',function(){
 			$(window).resize(function() {
 
 				var height = $(window).height();
-				height = height - 15 -$('#top-wrap').height();
+				height = height -$('#top-wrap').height();
 				$(elem).height(height);
 
 			}).resize();

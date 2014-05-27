@@ -1,6 +1,7 @@
 /* DUMMY UI CSS */
 
 /* Ui Styles */
+body {box-sizing: padding-box;}
 
 /* Upper Nav */
 #top-wrap {
@@ -11,7 +12,8 @@
 	margin-bottom: 0;
 	border-radius: 0;
 	background: none;
-	background-color:#fff; 
+	background-color:#fff;
+	box-shadow: none;
 }
 
 #subnav {
@@ -25,15 +27,30 @@
 }
 
 .navbar-subnav {
-	padding: 0 15px;
+	padding: 0 10px;
 }
 .navbar-subnav li {
 	display: inline-block;
 	margin:-0.1ex 5px;
 }
+.navbar-subnav a {
+	color: #333;
+	padding: 3px 5px;
+}
+.navbar-subnav a:hover {
+	color: #fff;
+	text-decoration: none;
+	background-color: #aaa;
+	border-radius: 5px;
+}
+
+.navbar-subnav a:active {
+	text-decoration: none;
+	background-color: #777;
+}
 
 .ui-wrap {
-	width:100%; 
+	width:100%;
 	padding:0;
 	height:auto;
 	overflow: hidden;
@@ -69,7 +86,7 @@
 
 #resizer[resizer-bar="vertical"] {
 	height:100%;
-	width:1px;
+	width:2px;
 }
 
 #resizer[resizer-bar="horizontal"] {
