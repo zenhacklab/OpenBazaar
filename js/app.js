@@ -99,59 +99,65 @@ app.directive('uiWrap',function(){
 });
 
 
-// app.directive('resizerBar',function($document) {
-// 	return {
-// 		restrict: "A",
-// 		link: function($scope,$element,$attrs) {
-// 			$element.on('mousedown',function(event) {
-// 				event.preventDefault();
-// 				var startX = event.pageX;
-// 				var startY = event.pageY;
+app.directive('resizerBar',function($document) {
+	return {
+		restrict: "A",
+		link: function($scope,$element,$attrs) {
 
-// 				$(document).on('mousemove',{startX: startX, startY:startY},mousemove);
-// 				$(document).on('mouseup', mouseup);
-// 			});
+			$element.on('mousedown',function(event) {
+				event.preventDefault();
+				var startX = event.pageX;
+				var startY = event.pageY;
+				var lwidth = $($attrs.resizerLeft).width();
+				var rwidth = $($attrs.resizerRight).width();
+				var wwidth = $('#ui-wrap').width();
 
-// 			function mousemove(event) {
+				$(document).on('mousemove',{startX: startX, startY:startY,lwidth:lwidth,rwidth:rwidth,wwidth:wwidth},mousemove);
+				$(document).on('mouseup', mouseup);
+			});
 
-//             if ($attrs.resizerBar == 'vertical') {
+			function mousemove(event) {
 
-// 				// Redifine Start Orientation
-// 				var startX = event.data.startX;
-// 				var startY = event.data.startY;
+				if ($attrs.resizerBar == 'vertical') {
 
-//                 // Handle vertical resizer
-//                 var x = startX - event.pageX;
-//                 var y = startY - event.pageY;
+					// Redifine Start Orientation
+					var startX = event.data.startX;
+					var startY = event.data.startY;
 
-//                 if ($attrs.resizerMax && Math.abs(x) > $attrs.resizerMax) {
-//                     x = parseInt($attrs.resizerMax, 10);
-//                 }
+					// Redefine Variables from Event Data
+					var lwidth = event.data.lwidth;
+					var rwidth = event.data.rwidth;
+					var wwidth = event.data.wwidth;
 
-//                 var currentwidth = $(window).resize(function() {
-// 					return $($attrs.resizerLeft).width();
-// 				}).resize();
+					// Handle vertical resizer
+					var x = event.pageX - startX;
+					var y = event.pageY - startY;
 
-//                 $element.css({
-//                     right: x + 'px'
-//                 });
+					if ($attrs.resizerMax && Math.abs(x) > $attrs.resizerMax) {
+						x = parseInt($attrs.resizerMax, 10);
+					}
 
-//                 $($attrs.resizerLeft).css({
-//                     width: currentwidth + x + 'px'
-//                 });
-//                 $($attrs.resizerRight).css({
-//                     left: (x + parseInt($attrs.resizerWidth, 10)) + 'px'
-//                 });
+					$($attrs.resizerLeft).css({
+						width: convrtoperc((lwidth + x),wwidth) + '%'
+					});
+					$($attrs.resizerRight).css({
+						width: convrtoperc((rwidth + -x),wwidth) + '%'
+					});
 
-//             }
-//         }
+				}
+			}
 
-//         function mouseup() {
-//             $(document).unbind('mousemove', mousemove);
-//             $(document).unbind('mouseup', mouseup);
-//         }
+			function mouseup() {
+				$(document).unbind('mousemove', mousemove);
+				$(document).unbind('mouseup', mouseup);
+			}
 
-// 		}
-// 	};
-// });
+			function convrtoperc(x,w) {
+					var wwidth = w;
+					var xperc = 100*(x / w);
+					return xperc;
+            }
+		}
+	};
+});
 
