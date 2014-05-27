@@ -98,7 +98,7 @@ app.directive('uiWrap',function(){
 	};
 });
 
-
+// Resize Bar Directive
 app.directive('resizerBar',function($document) {
 	return {
 		restrict: "A",
@@ -112,7 +112,14 @@ app.directive('resizerBar',function($document) {
 				var rwidth = $($attrs.resizerRight).width();
 				var wwidth = $('#ui-wrap').width();
 
-				$(document).on('mousemove',{startX: startX, startY:startY,lwidth:lwidth,rwidth:rwidth,wwidth:wwidth},mousemove);
+				$(document).on('mousemove',{
+					startX: startX,
+					startY: startY,
+					lwidth: lwidth,
+					rwidth: rwidth,
+					wwidth: wwidth
+				},mousemove);
+
 				$(document).on('mouseup', mouseup);
 			});
 
@@ -133,8 +140,10 @@ app.directive('resizerBar',function($document) {
 					var x = event.pageX - startX;
 					var y = event.pageY - startY;
 
+					// Check Max Resizing
 					if ($attrs.resizerMax && Math.abs(x) > $attrs.resizerMax) {
-						x = parseInt($attrs.resizerMax, 10);
+						if (x < 0) {x = -parseInt($attrs.resizerMax, 10);}
+						else { x = parseInt($attrs.resizerMax, 10);}
 					}
 
 					$($attrs.resizerLeft).css({
