@@ -104,13 +104,23 @@ app.directive('resizerBar',function($document) {
 		restrict: "A",
 		link: function($scope,$element,$attrs) {
 
+			// Check for Parameters
+			if(!$attrs.resizerLeft || !$attrs.resizerRight || !$attrs.resizerMax){console.error("Missing Resizer Parameter(s)!");}
+
+			if($attrs.change === ""){
+				$attrs.change = 0;
+			}
+			var xmax = parseInt($attrs.resizerMax, 10);
+
+
 			$element.on('mousedown',function(event) {
 				event.preventDefault();
-				var startX = event.pageX;
-				var startY = event.pageY;
-				var lwidth = $($attrs.resizerLeft).width();
-				var rwidth = $($attrs.resizerRight).width();
-				var wwidth = $('#ui-wrap').width();
+
+				var lwidth = $($attrs.resizerLeft).width(),
+					rwidth = $($attrs.resizerRight).width(),
+					startX = event.pageX,
+					startY = event.pageY,
+					wwidth = $('#ui-wrap').width();
 
 				$(document).on('mousemove',{
 					startX: startX,
@@ -118,7 +128,7 @@ app.directive('resizerBar',function($document) {
 					lwidth: lwidth,
 					rwidth: rwidth,
 					wwidth: wwidth
-				},mousemove);
+				}, mousemove);
 
 				$(document).on('mouseup', mouseup);
 			});
@@ -128,31 +138,60 @@ app.directive('resizerBar',function($document) {
 				if ($attrs.resizerBar == 'vertical') {
 
 					// Redifine Start Orientation
-					var startX = event.data.startX;
-					var startY = event.data.startY;
-
-					// Redefine Variables from Event Data
-					var lwidth = event.data.lwidth;
-					var rwidth = event.data.rwidth;
-					var wwidth = event.data.wwidth;
+					var startX = event.data.startX,
+						startY = event.data.startY,
+						lwidth = event.data.lwidth,
+						rwidth = event.data.rwidth,
+						wwidth = event.data.wwidth;
 
 					// Handle vertical resizer
 					var x = event.pageX - startX;
 					var y = event.pageY - startY;
 
-					// Check Max Resizing
-					if ($attrs.resizerMax && Math.abs(x) > $attrs.resizerMax) {
-						if (x < 0) {x = -parseInt($attrs.resizerMax, 10);}
-						else { x = parseInt($attrs.resizerMax, 10);}
+					
+
+					var totalchange = parseInt($attrs.change, 10) + x;
+
+					if(Math.abs(totalchange) < xmax){
+						$($attrs.resizerLeft).css({
+							width: convrtoperc((lwidth + x),wwidth) + '%'
+						});
+						$($attrs.resizerRight).css({
+							width: convrtoperc((rwidth + -x),wwidth) + '%'
+						});
+					} else {
+						if(totalchange < 0){totalchange = -xmax;}
+						if(totalchange > 0){totalchange = xmax;}
 					}
 
-					$($attrs.resizerLeft).css({
-						width: convrtoperc((lwidth + x),wwidth) + '%'
-					});
-					$($attrs.resizerRight).css({
-						width: convrtoperc((rwidth + -x),wwidth) + '%'
+					$attrs.$set("x",x);
+
+					$(document).on('mouseup', function() {
+						$attrs.$set("change",totalchange);
 					});
 
+
+					// Check Max Resizing
+
+					// if (Math.abs(prevx + x) < xmax) {
+					//	$($attrs.resizerLeft).css({
+					//		width: convrtoperc((lwidth + x),wwidth) + '%'
+					//	});
+					//	$($attrs.resizerRight).css({
+					//		width: convrtoperc((rwidth + -x),wwidth) + '%'
+					//	});
+						
+					//} else {
+					//	if (x < 0) {
+					//		$($attrs.resizerLeft).css({width:convrtoperc((normlwidth - xmax),wwidth) + '%'});
+					//		console.log((normlwidth + xmax)/wwidth);
+					//		$($attrs.resizerRight).css({width:convrtoperc((normrwidth + xmax),wwidth) + '%'});
+					//	}
+					//	else {
+					//		$($attrs.resizerLeft).css({width:convrtoperc((normlwidth + xmax),wwidth) + '%'});
+					//		$($attrs.resizerRight).css({width:convrtoperc((normrwidth - xmax),wwidth) + '%'});
+					//	}
+					//}
 				}
 			}
 
@@ -161,10 +200,10 @@ app.directive('resizerBar',function($document) {
 				$(document).unbind('mouseup', mouseup);
 			}
 
+			// if(mouseup().currentchange){var currentchange = mouseup().currentchange;}
+
 			function convrtoperc(x,w) {
-					var wwidth = w;
-					var xperc = 100*(x / w);
-					return xperc;
+					return 100*(x / w);
             }
 		}
 	};
