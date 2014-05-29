@@ -1,0 +1,71 @@
+/* Ui Styles */
+
+.main {
+	background-color: #fff;
+	padding: 20px 20px;
+}
+
+.option {
+	background-color: #fff;
+}
+
+.sidenav {
+	background-color: #e9eeff;
+}
+
+/*Side Navigation Styles*/
+
+.sidenav li a {
+	color:#333;
+	padding-left:30px;
+}
+
+.sidenav li.label  {
+	text-align: left;
+	padding: 10px 15px 5px;
+	font-size: 1em;
+	color:rgba(0,0,0,0.2);
+
+}
+.sidenav ul {
+	padding-bottom: 30px;
+	border-bottom: 1px solid #ccc;
+}
+
+.sidenav .infopanel {
+	border-radius: 0;
+	margin-bottom: 0;
+}
+
+.sidenav .infopanel .panel-body {
+	padding: 10px 15px;
+}
+
+.sidenav .infopanel.wallet {
+	background-color: rgba(0,0,0,0.1);
+}
+
+.sidenav .infopanel.rep {
+	background-color: rgba(0,0,0,0.2);
+}
+
+.sidenav .infopanel .label {
+	padding: 0 0px 1px;
+	margin-bottom: 0px;
+}
+
+.sidenav .infopanel h3 {
+	margin:5px 0;
+	color:#333;
+}
+
+/* Catalog Styles */
+
+.catalog-item {
+	border: none;
+	border-radius: 0;
+	margin-bottom: 0;
+	border-bottom: 1px solid #eee;
+}
+
+
