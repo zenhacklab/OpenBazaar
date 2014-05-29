@@ -107,57 +107,73 @@ app.directive('resizerBar',function($document) {
 			// Check for Parameters
 			if(!$attrs.resizerLeft || !$attrs.resizerRight || !$attrs.resizerMax){console.error("Missing Resizer Parameter(s)!");}
 
-			if($attrs.change === ""){
-				$attrs.change = 0;
-			}
-			var xmax = parseInt($attrs.resizerMax, 10);
+			// Check if Change Attribute is Changed or not.
+			if ($attrs.change !== 0 && !$attrs.change){$attrs.change = 0;}
+			var totalchange = parseInt($attrs.change, 10),
+				xmax = parseInt($attrs.resizerMax, 10);
 
+			// Define Percent Change Function (and prevent both resizers from acting the same time)
+			function convrtoperc(x,w) {
+					return 100*(x / w);
+            }
 
 			$element.on('mousedown',function(event) {
 				event.preventDefault();
 
+				// Find Current Widths on Click
 				var lwidth = $($attrs.resizerLeft).width(),
 					rwidth = $($attrs.resizerRight).width(),
 					startX = event.pageX,
 					startY = event.pageY,
-					wwidth = $('#ui-wrap').width(),
-					totalchange = {};
+					wwidth = $('#ui-wrap').width();
 
-				$document.on('mousemove',function(event) {
-					if ($attrs.resizerBar == 'vertical') {
+				$document
+					.on('mousemove',function(event) {
+						if ($attrs.resizerBar == 'vertical') {
 
-						// Handle vertical resizer
-						var x = event.pageX - startX,
-							y = event.pageY - startY;
+							// Handle vertical resizer
+							var x = event.pageX - startX,
+								y = event.pageY - startY;
 
-						totalchange = parseInt($attrs.change, 10) + x;
+							// Find Current Position
+							totalchange = parseInt($attrs.change, 10) + x;
 
-						if(Math.abs(totalchange) < xmax){
-							$($attrs.resizerLeft).css({
-								width: convrtoperc((lwidth + x),wwidth) + '%'
-							});
-							$($attrs.resizerRight).css({
-								width: convrtoperc((rwidth + -x),wwidth) + '%'
-							});
-						} else {
-							if(x < 0){totalchange = -xmax;}
-							if(x > 0){totalchange = xmax;}
+							if(Math.abs(totalchange) <= xmax){
+								$($attrs.resizerLeft).css({
+									width: convrtoperc((lwidth + x),wwidth) + '%'
+								});
+								$($attrs.resizerRight).css({
+									width: convrtoperc((rwidth + -x),wwidth) + '%'
+								});
+							} else {
+
+								// Optional "Bouncy" Sliders
+								// var overmove = Math.abs(Math.abs(totalchange) - xmax),
+								//	overbounce = 50;
+
+								if(x < 0){
+									// if(overmove < overbounce) {
+									//	$('#ui-wrap').css({ "left" : -overmove + "px"});
+									// }
+									totalchange = -xmax;
+								}
+								if(x > 0){
+									// if(overmove < overbounce) {
+									//	$('#ui-wrap').css({ "left" : overmove + "px"});
+									// }
+									totalchange = xmax;
+								}
+							}
 						}
-					}
-				});
-
-				$document.on('mouseup', function() {
-					$attrs.$set("change",totalchange);
-					$document.unbind('mousemove');
-					$document.unbind('mouseup');
-				});
+					})
+					.on('mouseup', function() {
+						// $('#ui-wrap').css({ "left" : ""});
+						$attrs.$set("change",totalchange);
+						$document.unbind('mousemove');
+						$document.unbind('mouseup');
+					});
 			});
-
-			// if(mouseup().currentchange){var currentchange = mouseup().currentchange;}
-
-			function convrtoperc(x,w) {
-					return 100*(x / w);
-            }
+			
 		}
 	};
 });
