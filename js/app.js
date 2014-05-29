@@ -120,85 +120,40 @@ app.directive('resizerBar',function($document) {
 					rwidth = $($attrs.resizerRight).width(),
 					startX = event.pageX,
 					startY = event.pageY,
-					wwidth = $('#ui-wrap').width();
+					wwidth = $('#ui-wrap').width(),
+					totalchange = {};
 
-				$(document).on('mousemove',{
-					startX: startX,
-					startY: startY,
-					lwidth: lwidth,
-					rwidth: rwidth,
-					wwidth: wwidth
-				}, mousemove);
+				$document.on('mousemove',function(event) {
+					if ($attrs.resizerBar == 'vertical') {
 
-				$(document).on('mouseup', mouseup);
-			});
+						// Handle vertical resizer
+						var x = event.pageX - startX;
+						var y = event.pageY - startY;
 
-			function mousemove(event) {
+						totalchange = parseInt($attrs.change, 10) + x;
 
-				if ($attrs.resizerBar == 'vertical') {
+						if(Math.abs(totalchange) < xmax){
+							$($attrs.resizerLeft).css({
+								width: convrtoperc((lwidth + x),wwidth) + '%'
+							});
+							$($attrs.resizerRight).css({
+								width: convrtoperc((rwidth + -x),wwidth) + '%'
+							});
+						} else {
+							if(totalchange < 0){totalchange = -xmax;}
+							if(totalchange > 0){totalchange = xmax;}
+						}
 
-					// Redifine Start Orientation
-					var startX = event.data.startX,
-						startY = event.data.startY,
-						lwidth = event.data.lwidth,
-						rwidth = event.data.rwidth,
-						wwidth = event.data.wwidth;
-
-					// Handle vertical resizer
-					var x = event.pageX - startX;
-					var y = event.pageY - startY;
-
-					
-
-					var totalchange = parseInt($attrs.change, 10) + x;
-
-					if(Math.abs(totalchange) < xmax){
-						$($attrs.resizerLeft).css({
-							width: convrtoperc((lwidth + x),wwidth) + '%'
-						});
-						$($attrs.resizerRight).css({
-							width: convrtoperc((rwidth + -x),wwidth) + '%'
-						});
-					} else {
-						if(totalchange < 0){totalchange = -xmax;}
-						if(totalchange > 0){totalchange = xmax;}
+						$attrs.$set("x",x);
 					}
+				});
 
-					$attrs.$set("x",x);
-
-					$(document).on('mouseup', function() {
-						$attrs.$set("change",totalchange);
-					});
-
-
-					// Check Max Resizing
-
-					// if (Math.abs(prevx + x) < xmax) {
-					//	$($attrs.resizerLeft).css({
-					//		width: convrtoperc((lwidth + x),wwidth) + '%'
-					//	});
-					//	$($attrs.resizerRight).css({
-					//		width: convrtoperc((rwidth + -x),wwidth) + '%'
-					//	});
-						
-					//} else {
-					//	if (x < 0) {
-					//		$($attrs.resizerLeft).css({width:convrtoperc((normlwidth - xmax),wwidth) + '%'});
-					//		console.log((normlwidth + xmax)/wwidth);
-					//		$($attrs.resizerRight).css({width:convrtoperc((normrwidth + xmax),wwidth) + '%'});
-					//	}
-					//	else {
-					//		$($attrs.resizerLeft).css({width:convrtoperc((normlwidth + xmax),wwidth) + '%'});
-					//		$($attrs.resizerRight).css({width:convrtoperc((normrwidth - xmax),wwidth) + '%'});
-					//	}
-					//}
-				}
-			}
-
-			function mouseup() {
-				$(document).unbind('mousemove', mousemove);
-				$(document).unbind('mouseup', mouseup);
-			}
+				$document.on('mouseup', function() {
+					$attrs.$set("change",totalchange);
+					$document.unbind('mousemove');
+					$document.unbind('mouseup');
+				});
+			});
 
 			// if(mouseup().currentchange){var currentchange = mouseup().currentchange;}
 
