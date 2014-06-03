@@ -3,7 +3,7 @@
 *
 * Main App Module
 */
-var app = angular.module('dummyapp', ['ui.router']);
+var app = angular.module('dummyapp', ['ui.router','ngAnimate']);
 
 app.config(function($stateProvider, $urlRouterProvider) {
 
@@ -30,11 +30,11 @@ app.config(function($stateProvider, $urlRouterProvider) {
 				views: {
 					"list":{
 						templateUrl: "layouts/list/categories.html",
-						controller: "favoritesCntrl"
+						controller: "catalogCntrl"
 					},
 					"view":{
 						templateUrl: "layouts/view/category.html",
-						controller: "favoritesCntrl"
+						controller: "catalogCntrl"
 					}
 				}
 			})
@@ -77,6 +77,32 @@ app.config(function($stateProvider, $urlRouterProvider) {
 						controller: "favoritesCntrl"
 					}
 				}
+			})
+			.state('nav.history', {
+				url: "/history",
+				views: {
+					"list":{
+						templateUrl: "layouts/list/history.html",
+						controller: "historyCntrl"
+					},
+					"view":{
+						templateUrl: "layouts/view/order.html",
+						controller: "historyCntrl"
+					}
+				}
+			})
+			.state('nav.cart', {
+				url: "/history",
+				views: {
+					"list":{
+						templateUrl: "layouts/list/cart.html",
+						controller: "cartCntrl"
+					},
+					"view":{
+						templateUrl: "layouts/view/order.html",
+						controller: "cartCntrl"
+					}
+				}
 			});
 
 			$urlRouterProvider.otherwise("/catalog");
@@ -92,26 +118,33 @@ app.controller('indexCntrl', function($scope){});
 // Store Controller
 app.controller('storeCntrl', function($scope){});
 
+// History Purchases Controller
+app.controller('historyCntrl', function($scope){});
+
+// Cart - Current Purchases Controller
+app.controller('cartCntrl', function($scope){});
+
 // Catalog Controller
-app.controller('catalogCntrl', function($scope){
+app.controller('catalogCntrl', function($scope,$stateParams){
 
 	$scope.categories = [
 		{
 			title:"Category Title",
-			url:"#",
+			url:"/category1",
 			info:"Lorem Ipsum Dolor Est"
 		},
 		{
 			title:"Category Title",
-			url:"#",
+			url:"/category2",
 			info:"Lorem Ipsum Dolor Est"
 		},
 		{
 			title:"Category Title",
-			url:"#",
+			url:"/category3",
 			info:"Lorem Ipsum Dolor Est"
 		}
 	];
+	$scope.category = $stateParams.category;
 
 });
 

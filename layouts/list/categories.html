@@ -1,5 +1,5 @@
 <div class="list-group">
-  <a href="{{ category.url }}" class="list-group-item catalog-item" ng-repeat="category in categories">
+  <a href="{{ '#/catalog' + category.url }}" class="list-group-item catalog-item" ng-repeat="category in categories">
     <h4 class="list-group-item-heading">{{ category.title }}</h4>
     <p class="list-group-item-text">{{ category.info }}</p>
   </a>
