@@ -20,8 +20,21 @@ app.config(function($stateProvider, $urlRouterProvider) {
 						controller: "catalogCntrl"
 					},
 					"view":{
+						templateUrl: "layouts/view/blank.html",
+						controller: "catalogCntrl"
+					}
+				}
+			})
+			.state('nav.catalog-view', {
+				url: "/catalog/:category",
+				views: {
+					"list":{
+						templateUrl: "layouts/list/categories.html",
+						controller: "favoritesCntrl"
+					},
+					"view":{
 						templateUrl: "layouts/view/category.html",
-						controller: "storeCntrl"
+						controller: "favoritesCntrl"
 					}
 				}
 			})
