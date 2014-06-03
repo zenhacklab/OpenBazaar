@@ -56,6 +56,13 @@ body {box-sizing: padding-box;}
 	overflow: hidden;
 }
 
+.sub-wrap {
+	width: auto;
+	padding: 0;
+	height:auto;
+	overflow: hidden;
+}
+
 @media (max-width: 780px) {
 	.ui-wrap{
 		position: absolute;
@@ -95,13 +102,15 @@ body {box-sizing: padding-box;}
 }
 
 #resizer:hover {cursor: col-resize;}
+#resizer:active {cursor: col-resize !important;}
+#resizer:focus {cursor: col-resize !important;}
 
 /* App View Customization */
 
-#main {
+#view {
 	width:55%;
 }
-#option {
+#list {
 	width:24.4%;
 }
 #sidenav {

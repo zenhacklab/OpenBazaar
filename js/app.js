@@ -6,70 +6,68 @@
 var app = angular.module('dummyapp', ['ui.router']);
 
 app.config(function($stateProvider, $urlRouterProvider) {
+
 		$stateProvider
-			.state('viewStore', {
-				url: "",
+			.state('nav', {
+				abstract: true,
+				templateUrl:"layouts/nav.html"
+			})
+			.state('nav.catalog', {
+				url: "/catalog",
 				views: {
-					"main":{
-						templateUrl: "layouts/store/storepage.html",
-						controller: "storepageCntrl"
+					"list":{
+						templateUrl: "layouts/list/categories.html",
+						controller: "catalogCntrl"
 					},
-					"option":{
-						templateUrl: "layouts/store/listcatalog.html",
-						controller: "storepageCntrl"
+					"view":{
+						templateUrl: "layouts/view/category.html",
+						controller: "storeCntrl"
+					}
+				}
+			})
+			.state('nav.favorites', {
+				url: "/favorites",
+				views: {
+					"list":{
+						templateUrl: "layouts/list/favorites.html",
+						controller: "favoritesCntrl"
 					},
-					"sidenav":{
-						templateUrl: "layouts/nav.html"
+					"view":{
+						templateUrl: "layouts/view/blank.html",
+						controller: "favoritesCntrl"
+					}
+				}
+			})
+			.state('nav.favorites-view', {
+				url: "/favorites/:product",
+				replace:true,
+				views: {
+					"list":{
+						templateUrl: "layouts/list/favorites.html",
+						controller: "favoritesCntrl"
+					},
+					"view":{
+						templateUrl: "layouts/view/favorite.html",
+						controller: "favoritesCntrl"
+					}
+				}
+			})
+			.state('nav.store', {
+				url: "/:page/:ctgry",
+				views: {
+					"view":{
+						templateUrl: "layouts/view/favorites.html",
+						controller: "favoritesCntrl"
+					},
+					"list":{
+						templateUrl: "layouts/options/categories.html",
+						controller: "favoritesCntrl"
 					}
 				}
 			});
 
-			$urlRouterProvider.otherwise("");
+			$urlRouterProvider.otherwise("/catalog");
 
-			//	For Later Use
-			//	
-			//	.state('viewList', {
-			//		url: "",
-			//		view: {
-			//			"main":{
-			//				templateUrl: "store/catalogpage.html",
-			//				controller: "catalogCntrl"
-			//			},
-			//			"option":{
-			//				templateUrl: "store/listrecent.html",
-			//				controller: "userCntrl"
-			//			}
-			//		},
-			//		title:"OpenBazaar",
-			//	})
-			//	.state('viewUser', {
-			//		url: "",
-			//		view: {
-			//			"main":{
-			//				templateUrl: "store/userpage.html",
-			//				controller: "userCntrl"
-			//			},
-			//			"option":{
-			//				templateUrl: "store/userchat.html",
-			//				controller: "chatclientCntrl"
-			//			}
-			//		},
-			//		title:"OpenBazaar",
-			//	})
-			//	.state('makeAccount', {
-			//		url: "",
-			//		view: {
-			//			"main":{
-			//				templateUrl: "store/accountpage.html",
-			//				controller: "storepageCntrl"
-			//			},
-			//			"option":{
-			//				templateUrl: "store/userchat.html",
-			//				controller: "keymakerCntrl"
-			//			}
-			//		},
-			//		title:"OpenBazaar",
-			//	});
 
 });
 
@@ -78,8 +76,56 @@ app.config(function($stateProvider, $urlRouterProvider) {
 // Index Page Controller
 app.controller('indexCntrl', function($scope){});
 
-// Store Page Controller
-app.controller('storepageCntrl', function($scope){});
+// Store Controller
+app.controller('storeCntrl', function($scope){});
+
+// Catalog Controller
+app.controller('catalogCntrl', function($scope){
+
+	$scope.categories = [
+		{
+			title:"Category Title",
+			url:"#",
+			info:"Lorem Ipsum Dolor Est"
+		},
+		{
+			title:"Category Title",
+			url:"#",
+			info:"Lorem Ipsum Dolor Est"
+		},
+		{
+			title:"Category Title",
+			url:"#",
+			info:"Lorem Ipsum Dolor Est"
+		}
+	];
+
+});
+
+// Favorites Controller
+app.controller('favoritesCntrl', function($scope,$stateParams){
+
+	$scope.favorites = [
+		{
+			title:"Favorite Item ",
+			url:"/item1",
+			info:"Lorem Ipsum Dolor Est"
+		},
+		{
+			title:"Favorite Item ",
+			url:"/item2",
+			info:"Lorem Ipsum Dolor Est"
+		},
+		{
+			title:"Favorite Item ",
+			url:"/item3",
+			info:"Lorem Ipsum Dolor Est"
+		}
+	];
+	$scope.favorite = $stateParams.product;
+
+
+});
 
 
 // Set Wrap Application to 100%

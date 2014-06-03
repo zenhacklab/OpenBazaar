@@ -1,0 +1,6 @@
+<div class="list-group">
+  <a href="{{ '#/favorites' + favorite.url }}" class="list-group-item catalog-item" ng-repeat="favorite in favorites">
+    <h4 class="list-group-item-heading">{{ favorite.title + $index}}</h4>
+    <p class="list-group-item-text">{{ favorite.info }}</p>
+  </a>
+</div>

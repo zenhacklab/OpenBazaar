@@ -28,7 +28,7 @@
 		<base href="/">
 
 	</head>
-	<body ng-controller="indexCntrl">
+	<body>
 		<header id="top-wrap">
 			<nav class="navbar navbar-default" role="navigation" id="topnav">
 				<!-- Brand and toggle get grouped for better mobile display -->
@@ -45,9 +45,9 @@
 				<!-- Collect the nav links, forms, and other content for toggling -->
 				<div class="collapse navbar-collapse navbar-ex1-collapse">
 					<ul class="nav navbar-nav navbar-right">
-						<form class="navbar-form pull-right search">
+<!-- 						<form class="navbar-form pull-right search">
 							<input type="search" name="" id="input" class="form-control" value="" required="required" title="">
-						</form>
+						</form> -->
 						<li><a href="#">Info</a></li>
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
@@ -69,12 +69,6 @@
 				</ul>
 			</nav>
 		</header>
-		<main class="ui-wrap" id="ui-wrap">
-			<div ui-view="sidenav" id="sidenav" class="appview sidenav"></div>
-			<div id="resizer" resizer-bar="vertical" resizer-left="#sidenav" resizer-right="#option" resizer-max="50"></div>
-			<div ui-view="option" id="option" class="appview option"></div>
-			<div id="resizer" resizer-bar="vertical" resizer-left="#option" resizer-right="#main" resizer-max="200"></div>
-			<div ui-view="main" id="main" class="appview main"></div>
-		</main>
+		<main class="ui-wrap" id="ui-wrap" ui-view></main>
 	</body>
 </html>
