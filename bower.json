@@ -28,6 +28,7 @@
     "bootstrap": "*",
     "angular-bootstrap": "~0.11.0",
     "angular-ui-router": "~0.2.10",
+    "angular-animate": "*",
     "fontawesome": "~4.0.3"
   }
 }
