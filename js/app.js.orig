@@ -217,6 +217,7 @@ app.directive('resizerBar',function($document) {
 					rwidth = $($attrs.resizerRight).width(),
 					startX = event.pageX,
 					startY = event.pageY,
+<<<<<<< HEAD
 					wwidth = $('#ui-wrap').width();
 
 				$document
@@ -266,6 +267,48 @@ app.directive('resizerBar',function($document) {
 					});
 			});
 			
+=======
+					wwidth = $('#ui-wrap').width(),
+					totalchange = {};
+
+				$document.on('mousemove',function(event) {
+					if ($attrs.resizerBar == 'vertical') {
+
+						// Handle vertical resizer
+						var x = event.pageX - startX;
+						var y = event.pageY - startY;
+
+						totalchange = parseInt($attrs.change, 10) + x;
+
+						if(Math.abs(totalchange) < xmax){
+							$($attrs.resizerLeft).css({
+								width: convrtoperc((lwidth + x),wwidth) + '%'
+							});
+							$($attrs.resizerRight).css({
+								width: convrtoperc((rwidth + -x),wwidth) + '%'
+							});
+						} else {
+							if(totalchange < 0){totalchange = -xmax;}
+							if(totalchange > 0){totalchange = xmax;}
+						}
+
+						$attrs.$set("x",x);
+					}
+				});
+
+				$document.on('mouseup', function() {
+					$attrs.$set("change",totalchange);
+					$document.unbind('mousemove');
+					$document.unbind('mouseup');
+				});
+			});
+
+			// if(mouseup().currentchange){var currentchange = mouseup().currentchange;}
+
+			function convrtoperc(x,w) {
+					return 100*(x / w);
+            }
+>>>>>>> 18566246cbf2f630f3a83aadc9d2fb22c1f48390
 		}
 	};
 });
