@@ -29,6 +29,19 @@ if [ ! -d "$LOGDIR" ]; then
   mkdir $LOGDIR
 fi
 
+# Location of db directory
+DBDIR=db
+# Name of db file
+DBFILE=ob.db
+
+if [ ! -d "$LOGDIR" ]; then
+  mkdir $LOGDIR
+fi
+
+if [ ! -f $LOGDIR/$DBFILE ]; then
+    $PYTHON util/setup_db.py
+fi
+
 if [ $MODE == production ]; then
 
   # Identity server is coming soon
