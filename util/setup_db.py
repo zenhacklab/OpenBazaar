@@ -83,5 +83,3 @@ if not path.isfile(DB_PATH):
                     "signature TEXT, " \
                     "text TEXT, " \
                     "rating INT)")
-
-        #cur.execute("CREATE UNIQUE INDEX 'id_UNIQUE' ON 'contacts' ('id' ASC);")
