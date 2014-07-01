@@ -14,6 +14,7 @@ from orders import Orders
 import protocol
 import lookup
 from pymongo import MongoClient
+from db_store import Obdb 
 from data_uri import DataURI
 from PIL import Image, ImageOps
 from StringIO import StringIO
@@ -54,11 +55,7 @@ class Market(object):
         self._log = logging.getLogger('[%s] %s' % (self._market_id, self.__class__.__name__))
         self._log.info("Loading Market %s" % self._market_id)
 
-
-        #MONGODB_URI = 'mongodb://localhost:27017'
-        _dbclient = MongoClient()
-        self._db = _dbclient.openbazaar
-
+        self._db = Obdb()
         self.settings = self._transport.settings
 
         welcome = True
@@ -78,9 +75,6 @@ class Market(object):
         self.load_page(welcome)
 
 
-
-
-
     def load_page(self, welcome):
 
         nickname = self.settings['nickname'] if self.settings.has_key("nickname") else ""
@@ -92,7 +86,7 @@ class Market(object):
         self.signature = self._transport._myself.sign(tagline)
 
         if welcome:
-            self._db.settings.update({}, {"$set":{"welcome":"noshow"}})
+            self._db.updateEntries("settings", {'market_id': self._transport._market_id}, {"welcome":"noshow"})
         else:
             self.welcome = False
 
@@ -141,9 +135,7 @@ class Market(object):
         listing_key = hash_value.hexdigest()
 
         msg['key'] = listing_key
-
-        self._db.products.update({'id':product_id}, {'$set':msg}, True)
-
+        self._db.insertEntry("products", msg)
         self._log.debug('New Listing Key: %s' % listing_key)
 
         # Store listing
@@ -159,15 +151,12 @@ class Market(object):
     def republish_listing(self, msg):
 
         listing_id = msg.get('productID')
-        listing = self._db.products.find_one({'id':listing_id})
+        listing_ids = self._db.selectEntries("products", {"id": listing_id})
         key = listing['key']
 
         listing = json.loads(listing)
-        print listing
 
         self._transport._dht.iterativeStore(self._transport, key, listing, self._transport._guid)
-
-
 
 
     def update_listings_index(self):
@@ -179,9 +168,9 @@ class Market(object):
         listing_index_key = hashvalue.hexdigest()
 
         # Calculate index of listings
-        listing_ids = self._db.products.find({'market_id':self._transport._market_id}, {'key':1})
         my_listings = []
-        for listing_id in listing_ids:
+        listing_ids = self._db.selectEntries("products", {"market_id": self._transport._market_id, 'key':1})
+        for listing_id in listing_ids: 
             my_listings.append(listing_id['key'])
 
         self._log.debug('My Listings: %s' % my_listings)
@@ -198,29 +187,14 @@ class Market(object):
 
     def remove_product(self, msg):
         self._log.info("Removing product: %s" % msg)
-        self._db.products.remove({'id':msg['productID']})
+        self._db.deleteEntries("products", {'id':msg['productID']})
         self.update_listings_index()
 
 
     def get_products(self):
         self._log.info('Getting products for market: %s' % self._transport._market_id)
-        products = self._db.products.find({'market_id':self._transport._market_id})
-        my_products = []
-
-        for product in products:
-            my_products.append({"productTitle":product['productTitle'] if product.has_key("productTitle") else "",
-                                "id":product['id'] if product.has_key("id") else "",
-                                "productDescription":product['productDescription'] if product.has_key("productDescription") else "",
-                                "productPrice":product['productPrice'] if product.has_key("productPrice") else "",
-                                "productShippingPrice":product['productShippingPrice'] if product.has_key("productShippingPrice") else "",
-                                "productTags":product['productTags'] if product.has_key("productTags") else "",
-                                "productImageData":product['productImageData'] if product.has_key("productImageData") else "",
-                                "productQuantity":product['productQuantity'] if product.has_key("productQuantity") else "",
-                                "key":product['key'] if product.has_key("key") else "",
-                               })
-
-        return {"products": my_products}
-
+        products = self._db.selectEntries("products", {"market_id": self._transport._market_id})
+        return {"products": products}
 
 
 
@@ -229,31 +203,13 @@ class Market(object):
     def save_settings(self, msg):
         self._log.info("Settings to save %s" % msg)
         self._log.info(self._transport)
-        self._db.settings.update({'id':'%s'%self._transport._market_id}, {'$set':msg}, True)
+        self._db.updateEntries("settings", {'market_id': self._transport._market_id}, msg)
 
     def get_settings(self):
-        self._log.info(self._transport._market_id)
-        settings = self._db.settings.find_one({'id':'%s'%self._transport._market_id})
-
+        self._log.info(self._transport._market_id) 
+        settings = self._db.getOrCreate("settings", {"market_id": self._transport._market_id})
         if settings:
-            return {"bitmessage": settings['bitmessage'] if settings.has_key("bitmessage") else "",
-                    "email": settings['email'] if settings.has_key("email") else "",
-                    "PGPPubKey": settings['PGPPubKey'] if settings.has_key("PGPPubKey") else "",
-                    "pubkey": settings['pubkey'] if settings.has_key("pubkey") else "",
-                    "nickname": settings['nickname'] if settings.has_key("nickname") else "",
-                    "secret": settings['secret'] if settings.has_key("secret") else "",
-                    "welcome": settings['welcome'] if settings.has_key("welcome") else "",
-                    "escrowAddresses": settings['escrowAddresses'] if settings.has_key("escrowAddresses") else "",
-                    "storeDescription": settings['storeDescription'] if settings.has_key("storeDescription") else "",
-                    "city": settings['city'] if settings.has_key("city") else "",
-                    "stateRegion": settings['stateRegion'] if settings.has_key("stateRegion") else "",
-                    "street1": settings['street1'] if settings.has_key("street1") else "",
-                    "street2": settings['street2'] if settings.has_key("street2") else "",
-                    "countryCode": settings['countryCode'] if settings.has_key("countryCode") else "",
-                    "zip": settings['zip'] if settings.has_key("zip") else "",
-                    "arbiterDescription": settings['arbiterDescription'] if settings.has_key("arbiterDescription") else "",
-                    "arbiter": settings['arbiter'] if settings.has_key("arbiter") else "",
-                   }
+            return settings
 
 
     # PAGE QUERYING
