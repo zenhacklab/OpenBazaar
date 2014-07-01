@@ -42,7 +42,6 @@ class Obdb():
             d[col[0]] = row[idx]
         return d
 
-
     def getOrCreate(self, table, get_where_dict, operator="AND"):
         """ This method attempts to grab the record first. If it fails to find it, 
         it will create it.
@@ -81,7 +80,6 @@ class Obdb():
                     where_part = where_part + "%s %s = '%s'" % (operator, key, value)
             query = "UPDATE %s SET %s WHERE %s" \
                     % (table, set_part, where_part)
-
             self._log.info('query: %s' % query)
             cur.execute(query)
         self._disconnectFromDb()
@@ -109,7 +107,7 @@ class Obdb():
             self._log.info("query: %s "% query)
         self._disconnectFromDb()
 
-    def selectEntries(self, table, where_dict={"'1'":"1"}, operator="AND"):
+    def selectEntries(self, table, where_dict={"'1'":"1"}, operator="AND", order_field="id", order="ASC"):
         """ A wrapper for the SQL SELECT operation. It will always return all the 
             attributes for the selected rows.
         @param table: The table to search to
@@ -126,9 +124,8 @@ class Obdb():
                     first = False
                 else:
                     where_part = where_part + "%s %s = '%s'" % (operator, key, value)
-            query = "SELECT * FROM %s WHERE %s" \
-                    % (table, where_part)
-
+            query = "SELECT * FROM %s WHERE %s ORDER BY %s %s" \
+                    % (table, where_part, order_field, order)
             self._log.info("query: %s "% query)
             cur.execute(query)
             rows = cur.fetchall()                
