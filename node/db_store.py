@@ -8,6 +8,7 @@
 # may be created by processing this file with epydoc: http://epydoc.sf.net
 
 import sqlite3
+import logging
 
 # TODO: Grab this from constants file.
 DBFILE = "db/ob.db"
@@ -18,6 +19,7 @@ class Obdb():
     """ 
     def __init__(self):
         self.con = False
+        self._log = logging.getLogger('DB')
 
     def _connectToDb(self):
         """ Opens a db connection
@@ -40,12 +42,26 @@ class Obdb():
             d[col[0]] = row[idx]
         return d
 
+
+    def getOrCreate(self, table, get_where_dict, operator="AND"):
+        """ This method attempts to grab the record first. If it fails to find it, 
+        it will create it.
+        @param table: The table to search to
+        @param get_where_dict: A dictionary with the WHERE/SET clauses
+        """
+        entries = self.selectEntries(table, get_where_dict, operator)
+        if len(entries) == 0:
+            self.insertEntry(table, get_where_dict)
+        return self.selectEntries(table, get_where_dict, operator)[0]
+        
+
     def updateEntries(self, table, where_dict, set_dict, operator="AND"):
         """ A wrapper for the SQL UPDATE operation
         @param table: The table to search to
         @param whereDict: A dictionary with the WHERE clauses
         @param setDict: A dictionary with the SET clauses
         """
+
         self._connectToDb()
         with self.con:
             cur = self.con.cursor()
@@ -62,9 +78,11 @@ class Obdb():
                     where_part = "%s = '%s'" % (key, value)
                     first = False
                 else:
-                    where_part = where_part + ", %s = '%s'" % (key, value)
+                    where_part = where_part + "%s %s = '%s'" % (operator, key, value)
             query = "UPDATE %s SET %s WHERE %s" \
                     % (table, set_part, where_part)
+
+            self._log.info('query: %s' % query)
             cur.execute(query)
         self._disconnectFromDb()
 
@@ -88,9 +106,10 @@ class Obdb():
             query = "INSERT INTO %s(%s) VALUES(%s)"  \
                     % (table, updatefield_part, setfield_part)
             cur.execute(query)
+            self._log.info("query: %s "% query)
         self._disconnectFromDb()
 
-    def selectEntries(self, table, where_dict={"'1'":"1"}):
+    def selectEntries(self, table, where_dict={"'1'":"1"}, operator="AND"):
         """ A wrapper for the SQL SELECT operation. It will always return all the 
             attributes for the selected rows.
         @param table: The table to search to
@@ -106,9 +125,11 @@ class Obdb():
                     where_part = "%s = '%s'" % (key, value)
                     first = False
                 else:
-                    where_part = where_part + ", %s = '%s'" % (key, value)
+                    where_part = where_part + "%s %s = '%s'" % (operator, key, value)
             query = "SELECT * FROM %s WHERE %s" \
                     % (table, where_part)
+
+            self._log.info("query: %s "% query)
             cur.execute(query)
             rows = cur.fetchall()                
         self._disconnectFromDb()
