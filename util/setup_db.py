@@ -30,17 +30,16 @@ if not path.isfile(DB_PATH):
 
         cur.execute("CREATE TABLE products(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                    "description TEXT, " \
-                    "price INT, " \
-                    "shippingPrice TEXT, " \
+                    "market_id INT, "
+                    "productTitle TEXT, "
+                    "productDescription TEXT, " \
+                    "productPrice INT, " \
+                    "productShippingPrice TEXT, " \
                     "imageData BLOB, " \
-                    "quantity INT, " \
+                    "productQuantity INT, " \
+                    "productTags TEXT, " \
                     "key TEXT)")
-
-        cur.execute("CREATE TABLE tags(" \
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                    "name TEXT, " \
-                    "productID INT)")
+        #TODO: Maybe it makes sense to put tags on a different table
 
         cur.execute("CREATE TABLE orders(" \
                     "id INTEGER PRIMARY KEY " \
@@ -55,6 +54,7 @@ if not path.isfile(DB_PATH):
 
         cur.execute("CREATE TABLE settings(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "market_id INT, " \
                     "nickname TEXT, " \
                     "secret TEXT, " \
                     "pubKey TEXT, " \
@@ -62,6 +62,7 @@ if not path.isfile(DB_PATH):
                     "email TEXT, " \
                     "pgpPubKey TEXT, " \
                     "bcAddress TEXT, " \
+                    "bitmessage TEXT, " \
                     "storeDescription TEXT, " \
                     "street1 TEXT, " \
                     "street2 TEXT, " \
@@ -69,8 +70,9 @@ if not path.isfile(DB_PATH):
                     "stateProvinceRegion TEXT, " \
                     "zip TEXT, " \
                     "country TEXT, " \
-                    "actAsArbiter INT, " \
-                    "experienceDescription TEXT)")
+                    "welcome TEXT, " \
+                    "arbiter INT, " \
+                    "arbiterDescription TEXT)")
 
         cur.execute("CREATE TABLE arbiters(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
