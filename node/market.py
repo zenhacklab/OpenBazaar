@@ -151,7 +151,7 @@ class Market(object):
     def republish_listing(self, msg):
 
         listing_id = msg.get('productID')
-        listing_ids = self._db.selectEntries("products", {"id": listing_id})
+        listing = self._db.selectEntries("products", {"id": listing_id})
         key = listing['key']
 
         listing = json.loads(listing)
