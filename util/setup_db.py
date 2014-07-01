@@ -45,6 +45,7 @@ if not path.isfile(DB_PATH):
                     "id INTEGER PRIMARY KEY " \
                     "AUTOINCREMENT, " \
                     "state TEXT, " \
+                    "type TEXT, " \
                     "address TEXT, " \
                     "buyer TEXT, " \
                     "seller TEXT, " \
@@ -74,8 +75,9 @@ if not path.isfile(DB_PATH):
                     "arbiter INT, " \
                     "arbiterDescription TEXT)")
 
-        cur.execute("CREATE TABLE arbiters(" \
+        cur.execute("CREATE TABLE escrows(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "order_id INT, " \
                     "address TEXT)")
 
         cur.execute("CREATE TABLE reviews(" \
