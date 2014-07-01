@@ -34,11 +34,11 @@ DBDIR=db
 # Name of db file
 DBFILE=ob.db
 
-if [ ! -d "$LOGDIR" ]; then
-  mkdir $LOGDIR
+if [ ! -d "$DBDIR" ]; then
+  mkdir $DBDIR
 fi
 
-if [ ! -f $LOGDIR/$DBFILE ]; then
+if [ ! -f $DBDIR/$DBFILE ]; then
     $PYTHON util/setup_db.py
 fi
 
