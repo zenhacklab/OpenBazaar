@@ -36,9 +36,11 @@ def proto_query_reputation(pubkey):
     return data
 
 
-def proto_page(uri, pubkey, guid, text, signature, nickname, PGPPubKey, email, bitmessage):
+def proto_page(uri, pubkey, guid, text, signature, nickname, PGPPubKey, email, bitmessage, arbiter, arbiter_description):
     data = {'type': 'page', 'uri': uri, 'pubkey': pubkey, 'senderGUID': guid, 'signature': signature.encode('hex'),
-            'text': text, 'nickname': nickname, 'PGPPubKey': PGPPubKey, 'email': email, 'bitmessage': bitmessage}
+            'text': text, 'nickname': nickname, 'PGPPubKey': PGPPubKey, 'email': email, 'bitmessage': bitmessage,
+            'arbiter':arbiter,
+            'arbiter_description':arbiter_description}
     return data
 
 
@@ -64,6 +66,16 @@ def order(id, buyer, seller, state, text, escrows=None, tx=None):
     # new -> accepted/rejected -> payed -> sent -> received
     return data
 
+def proto_listing(productTitle, productDescription, productPrice, productQuantity, market_id, productShippingPrice, productImageName, productImageData):
+    data = {'productTitle':productTitle,
+            'productDescription':productDescription,
+            'productPrice':productPrice,
+            'productQuantity':productQuantity,
+            'market_id':market_id,
+            'productShippingPrice':productShippingPrice,
+            'productImageName':productImageName,
+            'productImageData':productImageData}
+    return data
 
 def proto_store(key, value, originalPublisherID, age):
     data = {'type': 'store', 'key': key, 'value': value, 'originalPublisherID': originalPublisherID, 'age': age}

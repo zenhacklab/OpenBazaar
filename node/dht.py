@@ -45,10 +45,6 @@ class DHT(object):
         port = seed_peer._port
         self.add_known_node((ip, port, seed_peer._guid))
 
-
-
-
-
         self.add_active_peer(self._transport, (seed_peer._pub,
                                                seed_peer._address,
                                                seed_peer._guid))
@@ -56,12 +52,19 @@ class DHT(object):
         self._iterativeFind(self._settings['guid'], self._knownNodes,
                             'findNode')
 
-        # Periodically refresh buckets
-        # loop = tornado.ioloop.IOLoop.instance()
-        # refreshCB = tornado.ioloop.PeriodicCallback(self._refreshNode,
-        # constants.refreshTimeout,
-        # io_loop=loop)
-        # refreshCB.start()
+
+
+    def find_active_peer(self, peer_tuple):
+        found_peer = False
+        for idx, peer in enumerate(self._activePeers):
+            if peer_tuple == (peer._guid, peer._address, peer._pub):
+                found_peer = peer
+        return found_peer
+
+    def remove_active_peer(self, uri):
+        for idx, peer in enumerate(self._activePeers):
+            if uri == peer._address:
+                del self._activePeers[idx]
 
     def add_active_peer(self, transport, peer_tuple):
         """ This takes a tuple (pubkey, URI, guid) and adds it to the active
@@ -70,9 +73,6 @@ class DHT(object):
         :param transport: (CryptoTransportLayer) so we can get a new CryptoPeer
         :param peer_tuple: PUG tuple so we can make a peer connection
         """
-        new_peer = transport.get_crypto_peer(peer_tuple[2],
-                                           peer_tuple[1],
-                                           peer_tuple[0])
 
         # Check if peer to add is yourself
         if peer_tuple[2] == self._settings['guid']:
@@ -80,25 +80,33 @@ class DHT(object):
                            'active peers')
             return
 
+        foundMatchingPeer = False
+
         # Update peer's pubkey or uri if necessary
-        found_peer = False
         for idx, peer in enumerate(self._activePeers):
-            if peer.get_guid() == peer_tuple[2]:
-                found_peer = True
-                peer._pub = peer_tuple[0]
-                peer._address = peer_tuple[1]
-                self._activePeers[idx] = peer
 
-        if not found_peer:
-            self._log.debug('[Add Active Peer] Adding an active Peer: %s' %
-                            peer_tuple[2])
-            self._activePeers.append(new_peer)
+            active_peer_tuple = (peer._pub, peer._address, peer._guid)
+
+            if active_peer_tuple == peer_tuple:
+                self._log.info('Found matching peer, not adding.')
+                foundMatchingPeer = True
+
+            # Found partial match
+            if active_peer_tuple[1] == peer_tuple[1] or active_peer_tuple[2] == peer_tuple[2] or active_peer_tuple[0] == peer_tuple[0]:
+                self._log.info('Found partial match')
+                del self._activePeers[idx]
+                self._routingTable.removeContact(peer_tuple[2])
 
 
+        new_peer = transport.get_crypto_peer(peer_tuple[2],
+                                             peer_tuple[1],
+                                             peer_tuple[0])
+        self._activePeers.append(new_peer)
+        self._log.debug('Removing old contacts for this guid')
+        self._routingTable.removeContact(new_peer._guid)
+        self._routingTable.addContact(new_peer)
 
-        if not self._routingTable.getContact(peer_tuple[2]) and peer_tuple[2] != self._transport.get_guid():
-            self._log.debug('Adding contact to routing table')
-            self._routingTable.addContact(new_peer)
+
 
     def add_known_node(self, node):
         """ Accept a peer tuple and add it to known nodes list
@@ -143,7 +151,9 @@ class DHT(object):
         assert uri is not None
         assert pubkey is not None
 
-        new_peer = self._transport.get_crypto_peer(guid, uri, pubkey)
+        new_peer = self.find_active_peer((guid, uri, pubkey))
+        if not new_peer:
+            new_peer = self._transport.get_crypto_peer(guid, uri, pubkey)
 
         if guid == self._transport.guid:
             return
@@ -154,9 +164,6 @@ class DHT(object):
         else:
 
             if msg['findValue'] is True:
-
-                print 'key',key
-
                 if key in self._dataStore and self._dataStore[key] is not None:
 
                     self._log.debug('Found key: %s' % key)
@@ -171,14 +178,6 @@ class DHT(object):
                          "findID": findID})
                 else:
                     self._log.info('Did not find a key: %s' % key)
-                    # new_peer.send(
-                    #     {"type": "findNodeResponse",
-                    #      "senderGUID": self._transport.guid,
-                    #      "uri": self._transport._uri,
-                    #      "pubkey": self._transport.pubkey,
-                    #      "foundKey": [],
-                    #      "findID": findID})
-
 
             else:
                 # Search for contact in routing table
@@ -203,15 +202,10 @@ class DHT(object):
                         contactTriples.append((contact._guid, contact._address, contact._pub))
 
                     contactTriples = self.dedupe(contactTriples)
-
                     self._log.debug('Contact Triples: %s' % contactTriples)
-
-                    contact = self._routingTable.getContact(guid)
-
-                    peer = self._transport.get_crypto_peer(contact._guid, contact._address, contact._pub)
-
                     self._log.info('Sending found nodes to: %s' % guid)
-                    msg = peer.send(
+
+                    msg = new_peer.send(
                         {"type": "findNodeResponse",
                          "senderGUID": self._transport.guid,
                          "uri": self._transport._uri,
@@ -320,7 +314,7 @@ class DHT(object):
     def _refreshNode(self):
         """ Periodically called to perform k-bucket refreshes and data
         replication/republishing as necessary """
-
+        self._log.info('Refreshing Data')
         self._refreshRoutingTable()
         self._republishData()
 
@@ -342,7 +336,7 @@ class DHT(object):
         searchForNextNodeID()
 
     def _republishData(self, *args):
-        Thread(target=self._threadedRepublishData, args=()).start()
+        self._threadedRepublishData()
 
     def _threadedRepublishData(self, *args):
         """ Republishes and expires any stored data (i.e. stored
@@ -353,8 +347,6 @@ class DHT(object):
         self._log.debug('Republishing Data')
         expiredKeys = []
 
-        # self._dataStore.setItem('23e192e685d3ca73d5d56d2f1c85acb1346ba177', 'Brian', int(time.time()), int(time.time()), '23e192e685d3ca73d5d56d2f1c85acb1346ba176' )
-
         for key in self._dataStore.keys():
 
             # Filter internal variables stored in the datastore
@@ -362,20 +354,17 @@ class DHT(object):
                 continue
 
             now = int(time.time())
+            key = key.encode('hex')
             originalPublisherID = self._dataStore.originalPublisherID(key)
             age = now - self._dataStore.originalPublishTime(key) + 500000
-
-            self._log.debug('oPubID: %s, age: %s' % (originalPublisherID, age))
-            # print '  node:',ord(self.id[0]),'key:',ord(key[0]),'orig publishing time:',self._dataStore.originalPublishTime(key),'now:',now,'age:',age,'lastPublished age:',now - self._dataStore.lastPublished(key),'original pubID:', ord(originalPublisherID[0])
 
             if originalPublisherID == self._settings['guid']:
                 # This node is the original publisher; it has to republish
                 # the data before it expires (24 hours in basic Kademlia)
                 if age >= constants.dataExpireTimeout:
                     self._log.debug('Republishing key: %s' % key)
-                    Thread(target=self.iterativeStore, args=(key, self._dataStore[key],)).start()
-                    # self.iterativeStore(key, self._dataStore[key])
-                    # twisted.internet.reactor.callFromThread(self.iterativeStore, key, self._dataStore[key])
+                    self.iterativeStore(self._transport, key, self._dataStore[key])
+
             else:
                 # This node needs to replicate the data at set intervals,
                 # until it expires, without changing the metadata associated with it
@@ -385,9 +374,7 @@ class DHT(object):
                     # - remove it
                     expiredKeys.append(key)
                 elif now - self._dataStore.lastPublished(key) >= constants.replicateInterval:
-                    # ...data has not yet expired, and we need to replicate it
-                    Thread(target=self.iterativeStore,
-                           args=(key, self._dataStore[key], originalPublisherID, age,)).start()
+                    self.iterativeStore(self._transport, key, self._dataStore[key], originalPublisherID, age)
 
         for key in expiredKeys:
             del self._dataStore[key]
@@ -438,12 +425,12 @@ class DHT(object):
         TODO: Ideally we would want to send an array of listing IDs that we have locally and then the node would
         send back the missing or updated listings. This would save on queries for listings we already have.
         '''
-        listing_index_key = hashlib.sha1('listings-%s' % key).hexdigest()
+        listing_index_key = hashlib.sha1('contracts-%s' % key).hexdigest()
         hashvalue = hashlib.new('ripemd160')
         hashvalue.update(listing_index_key)
         listing_index_key = hashvalue.hexdigest()
 
-        self._log.info('Finding listings for store: %s' % listing_index_key)
+        self._log.info('Finding contracts for store: %s' % listing_index_key)
 
         self.iterativeFindValue(listing_index_key, callback)
 
@@ -469,11 +456,14 @@ class DHT(object):
         @type age: int
         """
         if originalPublisherID is None:
-            originalPublisherID = self._guid
+            originalPublisherID = self._transport._guid
 
         # Find appropriate storage nodes and save key value
-        self.iterativeFindNode(key, lambda msg, findKey=key, value=value, originalPublisherID=originalPublisherID,
+        if value:
+            self.iterativeFindNode(key, lambda msg, findKey=key, value=value, originalPublisherID=originalPublisherID,
                                            age=age: self.storeKeyValue(msg, findKey, value, originalPublisherID, age))
+        else:
+            self._log.info('No value to store')
 
     def storeKeyValue(self, nodes, key, value, originalPublisherID, age):
 
@@ -501,26 +491,8 @@ class DHT(object):
             if not peer:
                 peer = self._transport.get_crypto_peer(guid, uri)
 
-            #msg = peer.send_raw(json.dumps({'type':'hello', 'pubkey':self._transport.pubkey, 'uri':self._transport._uri, 'senderGUID':self._transport.guid }))
-
             peer.send(proto_store(key, value, originalPublisherID, age))
 
-        # for node in nodes:
-        #     self._log.debug('Publish Node: %s' % node)
-        #
-        #     if node[2] != self._transport._guid:
-        #
-        #       for p in self._activePeers:
-        #           if p._guid == node[2]:
-        #               peer = p
-        #
-        #       if not peer:
-        #           peer = self._routingTable.getContact(node[2])
-        #
-        #       if peer:
-        #           peer.send(proto_store(key, value, originalPublisherID, age))
-        #     else:
-        #       self._log.info('Trying to store on your own node')
 
     def _on_storeValue(self, msg):
 
@@ -534,7 +506,10 @@ class DHT(object):
         now = int(time.time())
         originallyPublished = now - age
 
-        self._dataStore.setItem(key, value, now, originallyPublished, originalPublisherID, self._market_id)
+        if value:
+            self._dataStore.setItem(key, value, now, originallyPublished, originalPublisherID, self._market_id)
+        else:
+            self._log.info('No value to store')
 
     def store(self, key, value, originalPublisherID=None, age=0, **kwargs):
         """ Store the received data in this node's local hash table
@@ -711,13 +686,11 @@ class DHT(object):
 
                     if contact:
 
-                        peer = self._transport.get_crypto_peer(contact._guid, contact._address, contact._pub)
-
                         msg = {"type": "findNode", "uri": contact._transport._uri, "senderGUID": self._transport._guid,
                                "key": new_search._key, "findValue": findValue, "findID": new_search._findID,
                                "pubkey": contact._transport.pubkey}
                         self._log.debug('Sending findNode to: %s %s' % (contact._address, msg))
-                        msg = peer.send(msg)
+                        msg = contact.send(msg)
                         self._log.info('MSG: %s' % msg)
 
                         new_search._contactedNow += 1

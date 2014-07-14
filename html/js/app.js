@@ -87,6 +87,9 @@ angular.module('app')
       case 'peer':
          $scope.add_peer(msg)
          break;
+      case 'peers':
+         $scope.update_peers(msg)
+         break;
       case 'peer_remove':
          $scope.remove_peer(msg)
          break;
@@ -105,8 +108,11 @@ angular.module('app')
       case 'myorders':
       	 $scope.parse_myorders(msg)
       	 break;
-      case 'products':
-         $scope.parse_products(msg)
+      case 'contracts':
+         $scope.parse_contracts(msg)
+         break;
+      case 'messages':
+         $scope.parse_messages(msg)
          break;
       case 'store_products':
          $scope.parse_store_products(msg)
@@ -125,7 +131,6 @@ angular.module('app')
          $scope.parse_response_pubkey(msg)
          break;
       default:
-
          console.log("Unhandled message!",msg)
          break;
     }
@@ -225,17 +230,33 @@ angular.module('app')
 
   }
 
-  $scope.product = {};
-  $scope.parse_products = function(msg) {
-      console.log(msg.products.products);
+  $scope.contract2 = {};
+  $scope.parse_contracts = function(msg) {
+      console.log(msg);
 
-      $scope.products = msg.products.products;
+      $scope.contracts = msg.contracts.contracts;
 
-      $scope.product = {};
+      $scope.contract2 = {};
       if (!$scope.$$phase) {
          $scope.$apply();
       }
 
+  }
+
+  $scope.message = {};
+  $scope.parse_messages = function(msg) {
+      if(msg != null &&
+         msg.messages != null &&
+         msg.messages.messages != null &&
+         msg.messages.messages.inboxMessages != null) {
+
+          $scope.messages = msg.messages.messages.inboxMessages;
+
+          $scope.message = {};
+          if (!$scope.$$phase) {
+             $scope.$apply();
+          }
+      }
   }
 
   $scope.store_products = {};
@@ -336,6 +357,17 @@ angular.module('app')
     }
   }
 
+  $scope.update_peers = function(msg) {
+
+    console.log('Refresh peers: ', msg);
+
+    $scope.peers = msg.peers;
+
+    if (!$scope.$$phase) {
+       $scope.$apply();
+    }
+  }
+
   $scope.remove_peer = function(msg) {
 
     console.log('Remove peer: ',msg);
@@ -401,13 +433,15 @@ angular.module('app')
   // A listing has shown up from the network
   $scope.store_listings = [];
   $scope.parse_new_listing = function(msg) {
-    listingJSON = jQuery.parseJSON(msg['data']);
-    $scope.store_listings.push(listingJSON)
+    console.log(msg.data);
+    contract_data = msg.data;
+    contract_data.key = msg.key;
+    $scope.store_listings.push(contract_data)
     $scope.store_listings = jQuery.unique($scope.store_listings);
-    $.each( $scope.store_listings, function(index, value){
-        console.log(value);
-        if (!value.productImageData) {
-            $scope.store_listings[index].productImageData = "img/no-photo.png";
+    $.each( $scope.store_listings, function(index, contract){
+        if (jQuery.isEmptyObject(contract.Contract.item_images)) {
+            console.log('empty object');
+            contract.Contract.item_images = "img/no-photo.png";
         }
     });
     $('#listing-loader').hide();
@@ -436,7 +470,8 @@ angular.module('app')
                       escrowAddresses:''}
   $scope.saveSettings = function() {
       var query = {'type': 'update_settings', settings: $scope.settings }
-      socket.send('update_settings', query)
+      socket.send('update_settings', query);
+      Notifier.success('Success', 'Settings saved successfully.');
   }
 
 
@@ -486,14 +521,14 @@ angular.module('app')
   	socket.send('order', order)
   }
 
-  $scope.removeProduct = function(productID) {
-     socket.send("remove_product", {"productID":productID});
-     socket.send("query_products", {})
+  $scope.removeContract = function(contract_id) {
+     socket.send("remove_contract", {"contract_id":contract_id});
+     socket.send("query_contracts", {})
   }
 
   $scope.republishListing = function(productID) {
      socket.send("republish_listing", {"productID":productID});
-     socket.send("query_products", {})
+     socket.send("query_contracts", {})
   }
 
 
@@ -546,6 +581,7 @@ angular.module('app')
 
   	switch(panelName) {
   		case 'messages':
+            $scope.queryMessages();
   			$scope.messagesPanel = true;
   			break;
   		case 'reviews':
@@ -555,11 +591,11 @@ angular.module('app')
   			$scope.ordersPanel = true;
   			$scope.queryMyOrder();
   			break;
-      case 'arbitration':
-        $scope.arbitrationPanel = true;
-        break;
+        case 'arbitration':
+            $scope.arbitrationPanel = true;
+            break;
   		case 'productCatalog':
-        $scope.queryProducts();
+            $scope.queryProducts();
   			$scope.productCatalogPanel = true;
   			break;
   		case 'settings':
@@ -577,9 +613,8 @@ angular.module('app')
     $scope.storeInfoPanel = false;
   	$scope.storeProductsPanel = false;
   	$scope.storeReviewsPanel = false;
-  	$scope.storeOrdersPanel = false;
   	$scope.storeOrderHistoryPanel = false;
-
+    $scope.storeArbiterPanel = false;
   }
 
   $scope.showStorePanel = function(panelName) {
@@ -593,15 +628,18 @@ angular.module('app')
         break;
       case 'storeProducts':
             $('#listing-loader').show();
-  			$scope.storeProductsPanel = true;
-        $scope.store_listings = [];
-        $scope.queryStoreProducts($scope.awaitingShop);
+  	        $scope.storeProductsPanel = true;
+            $scope.store_listings = [];
+            $scope.queryStoreProducts($scope.awaitingShop);
   			break;
   		case 'storeOrders':
   			//$scope.storeOrdersPanel = true;
   			break;
   		case 'storeReviews':
   			$scope.storeReviewsPanel = true;
+  			break;
+  	  case 'storeArbiter':
+  			$scope.storeArbiterPanel = true;
   			break;
 
   	}
@@ -610,7 +648,7 @@ angular.module('app')
   // Query for product listings from this store
   $scope.queryStoreProducts = function(storeID) {
 
-    console.log('Querying for products in store: '+storeID);
+    console.log('Querying for contracts in store: '+storeID);
     var query = { 'type':'query_store_products', 'key': storeID }
     socket.send('query_store_products', query);
 
@@ -627,9 +665,18 @@ angular.module('app')
 
   $scope.queryProducts = function() {
       // Query for products
-      var query = {'type': 'query_products', 'pubkey': ''}
+      var query = {'type': 'query_contracts', 'pubkey': ''}
       console.log('querying products')
-      socket.send('query_products', query)
+      socket.send('query_contracts', query)
+
+  }
+
+  $scope.queryMessages = function() {
+      // Query for messages
+      var query = {'type': 'query_messages'}
+      console.log('querying messages')
+      socket.send('query_messages', query)
+      console.log($scope.myself.messages)
 
   }
 
@@ -789,6 +836,7 @@ $scope.WelcomeModalCtrl = function ($scope, $modal, $log) {
 
 
 // Modal Code
+
 $scope.ProductModal = function ($scope, $modal, $log) {
 
   $scope.open = function (size, backdrop) {
@@ -796,13 +844,13 @@ $scope.ProductModal = function ($scope, $modal, $log) {
       backdrop = backdrop ? backdrop : true;
 
       var modalInstance = $modal.open({
-        templateUrl: 'ProductModal.html',
+        templateUrl: 'addContract.html',
         controller: ProductModalInstance,
         size: size,
         backdrop: backdrop,
         resolve: {
-          product: function () {
-            return {"product":$scope.product};
+          contract: function () {
+            return {"contract":$scope.contract};
           }
         }
       });
@@ -818,9 +866,107 @@ $scope.ProductModal = function ($scope, $modal, $log) {
 
 };
 
-var ProductModalInstance = function ($scope, $modalInstance, product) {
+var ProductModalInstance = function ($scope, $modalInstance, contract) {
 
-  $scope.product = product.product;
+  $scope.contract = contract;
+  $scope.contract.productCondition = 'New';
+
+    $scope.createContract = function() {
+
+        console.log($scope.contract);
+
+        if(contract.contract) {
+
+            // Imported JSON format contract
+            jsonContract = $scope.contract.rawText;
+            console.log(jsonContract);
+
+            socket.send("import_raw_contract", {'contract':jsonContract});
+
+        } else {
+
+            contract = {  };
+            contract.Contract_Metadata = {
+                "OBCv": "0.1-alpha",
+                "category": "physical_goods",
+                "subcategory": "fixed_price",
+                "contract_nonce": "01",
+                "expiration": "2014-01-01 00:00:00"
+            }
+            contract.Seller = {
+                "seller_GUID": "",
+                "seller_BTC_uncompressed_pubkey": "",
+                "seller_PGP": ""
+            }
+            contract.Contract = {
+                "item_title": $scope.contract.productTitle,
+                "item_keywords": [],
+                "currency": "XBT",
+                "item_price": $scope.contract.productPrice,
+                "item_condition": $scope.contract.productCondition,
+                "item_quantity": $scope.contract.productQuantity,
+                "item_desc": $scope.contract.productDescription,
+                "item_images": {},
+                "item_delivery": {
+                      "countries": "",
+                      "region": "",
+                      "est_delivery": "",
+                      "shipping_price": $scope.contract.productShippingPrice
+                }
+            }
+
+            keywords = ($scope.contract.productKeywords) ? $scope.contract.productKeywords.split(',') : []
+            $.each(keywords, function(i, el){
+                if($.inArray(el, contract.Contract.item_keywords) === -1) contract.Contract.item_keywords.push(el);
+            });
+
+            var imgUpload = document.getElementById('inputProductImage').files[0];
+
+            if(imgUpload) {
+
+              if (imgUpload.type != '' && $.inArray(imgUpload.type, ['image/jpeg', 'image/gif', 'image/png']) != -1) {
+
+                var r = new FileReader();
+                r.onloadend = function(e){
+                  var data = e.target.result;
+
+                  contract.Contract.item_images.image1 = imgUpload.result;
+
+                  console.log(contract);
+                  socket.send("create_contract", contract);
+                  Notifier.success('Success', 'Contract saved successfully.');
+                  socket.send("query_contracts", {})
+
+
+                }
+                r.readAsArrayBuffer(imgUpload);
+
+
+              } else {
+
+                console.log(contract);
+                socket.send("create_contract", contract);
+                Notifier.success('Success', 'Contract saved successfully.');
+                socket.send("query_contracts", {})
+
+
+              }
+
+            } else {
+                console.log(contract);
+                socket.send("create_contract", contract);
+
+                socket.send("query_contracts", {})
+
+            }
+
+
+        }
+
+        $modalInstance.dismiss('cancel');
+
+
+    }
 
   $scope.saveProduct = function () {
 
@@ -840,7 +986,7 @@ var ProductModalInstance = function ($scope, $modalInstance, product) {
 
           console.log('SAVED:',$scope.product);
           socket.send("save_product", $scope.product)
-          socket.send("query_products", {})
+          socket.send("query_contracts", {})
 
           $modalInstance.dismiss('cancel');
 
@@ -851,7 +997,7 @@ var ProductModalInstance = function ($scope, $modalInstance, product) {
       } else {
         console.log('SAVED:',$scope.product);
         socket.send("save_product", $scope.product)
-        socket.send("query_products", {})
+        socket.send("query_contracts", {})
 
         $modalInstance.dismiss('cancel');
       }
@@ -860,7 +1006,7 @@ var ProductModalInstance = function ($scope, $modalInstance, product) {
 
       console.log('SAVED:',$scope.product);
       socket.send("save_product", $scope.product)
-      socket.send("query_products", {})
+      socket.send("query_contracts", {})
 
       $modalInstance.dismiss('cancel');
     }
@@ -870,7 +1016,7 @@ var ProductModalInstance = function ($scope, $modalInstance, product) {
   };
 
   $scope.cancel = function () {
-    socket.send("query_products", {});
+    socket.send("query_contracts", {});
     $modalInstance.dismiss('cancel');
   };
 
@@ -887,7 +1033,7 @@ var ProductModalInstance = function ($scope, $modalInstance, product) {
 
 $scope.BuyItemCtrl = function ($scope, $modal, $log) {
 
-    $scope.open = function (size, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData) {
+    $scope.open = function (size, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key) {
 
 
 
@@ -903,7 +1049,8 @@ $scope.BuyItemCtrl = function ($scope, $modal, $log) {
             productTitle: function() { return productTitle},
             productPrice: function() { return productPrice},
             productDescription: function() { return productDescription},
-            productImageData: function() { return productImageData}
+            productImageData: function() { return productImageData},
+            key: function() { return key }
         },
         size: size
       });
@@ -924,7 +1071,7 @@ $scope.BuyItemCtrl = function ($scope, $modal, $log) {
   };
 
 
-$scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData) {
+$scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key) {
 
     console.log(productTitle, productPrice, productDescription, productImageData);
     $scope.myself = myself;
@@ -933,6 +1080,11 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
     $scope.productPrice = productPrice;
     $scope.productDescription = productDescription;
     $scope.productImageData = productImageData;
+    $scope.totalPrice = productPrice;
+    $scope.productQuantity = 1;
+    $scope.key = key;
+
+    console.log($scope);
 
     $scope.ok = function () {
       $modalInstance.close();
@@ -942,33 +1094,32 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
       $modalInstance.dismiss('cancel');
     };
 
+    $scope.updateTotal = function() {
+        var newPrice = $('#itemQuantity').val()*$scope.productPrice;
+        newPrice = Math.round(newPrice * 100000) / 100000
+        $('#totalPrice').html(newPrice);
+    }
 
-    $scope.newOrder = {message:'', tx: '', listingKey:'', listingTotal:'', productTotal:''}
-    $scope.createOrder = function() {
+    $scope.order = {message:'', tx: '', listingKey:key, listingTotal:'', productTotal:'', productQuantity:1}
+    $scope.submitOrder = function() {
+
+
 
       $scope.creatingOrder = false;
 
       var newOrder = {
-          'message': $scope.newOrder.message,
+          'message': $scope.order.message,
           'state': 'new',
           'buyer': $scope.myself.pubkey,
           'seller': $scope.merchantPubkey,
-          'listingKey': $scope.newOrder.listingKey,
-          'listingTotal': $scope.newOrder.listingTotal
+          'listingKey': $scope.key,
+          'orderTotal': $('#totalPrice').html()
       }
-      //console.log(newOrder);
-      //$scope.newOrder.text = '';
-      //$scope.orders.push(newOrder);     // This doesn't really do much since it gets wiped away
+      console.log(newOrder);
       socket.send('order', newOrder);
       $scope.sentOrder = true;
 
-      console.log($scope);
-
       $modalInstance.close();
-
-
-
-
 
     }
 
@@ -977,6 +1128,100 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
   };
 
 
+$scope.ComposeMessageCtrl = function ($scope, $modal, $log) {
+    $scope.compose = function (size, myself, my_address, msg) {
+      composeModal = $modal.open({
+        templateUrl: 'composeMessage.html',
+        controller: $scope.ComposeMessageInstanceCtrl,
+        resolve: {
+            myself: function() { return myself },
+            my_address: function() { return my_address },
+            msg: function() { return msg; },
+        },
+        size: size
+      });
+      afterFunc = function () {
+        $scope.showDashboardPanel('messages');
+      };
+      composeModal.result.then(afterFunc,
+          function () {
+            $log.info('Modal dismissed at: ' + new Date());
+      });
+    };
+    $scope.view = function (size, myself, my_address, msg) {
+      viewModal = $modal.open({
+        templateUrl: 'viewMessage.html',
+        controller: $scope.ViewMessageInstanceCtrl,
+        resolve: {
+            myself: function() { return myself },
+            my_address: function() { return my_address },
+            msg: function() { return msg },
+        },
+        size: size
+      });
+      afterFunc = function () {
+        $scope.showDashboardPanel('messages');
+      };
+      viewModal.result.then(afterFunc,
+          function () {
+            $log.info('Modal dismissed at: ' + new Date());
+      });
+    };
+  };
 
+
+$scope.ComposeMessageInstanceCtrl = function ($scope, $modalInstance, myself, my_address, msg) {
+    $scope.myself = myself;
+    $scope.my_address = my_address;
+    $scope.msg = msg;
+
+    // Fill in form if msg is passed - reply mode
+    if(msg != null) {
+        $scope.toAddress = msg.fromAddress;
+        // Make sure subject start with RE: 
+        var sj = msg.subject;
+        if(sj.match(/^RE:/) == null) {
+            sj = "RE: " + sj;
+        }
+        $scope.subject = sj;
+        // Quote message
+        quote_re = /^(.*?)/mg;
+        var quote_msg = msg.message.replace(quote_re, "> $1");
+        $scope.body = "\n"+quote_msg;
+    }
+
+    $scope.send = function () {
+      // Trigger validation flag.
+      $scope.submitted = true;
+
+      // If form is invalid, return and let AngularJS show validation errors.
+      if (composeForm.$invalid) {
+        return;
+      }
+
+      var query = {'type': 'send_message', 'to': toAddress.value,
+                   'subject': subject.value, 
+                   'body': body.value}
+      console.log('sending message with subject ' + subject)
+      socket.send('send_message', query)
+
+      $modalInstance.close();
+    };
+
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+};
+
+$scope.ViewMessageInstanceCtrl = function ($scope, $modalInstance, myself, my_address, msg) {
+
+    $scope.myself = myself;
+    $scope.my_address = my_address;
+    $scope.msg = msg;
+
+    $scope.close = function () {
+      $modalInstance.dismiss('cancel');
+    };
+};
 
 }])

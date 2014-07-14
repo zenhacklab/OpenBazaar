@@ -33,14 +33,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
      }
    end
 
+  config.vm.synced_folder ".", "/vagrant",  :mount_options => ["dmode=755,fmode=755"]
 
   config.vm.provision "shell", inline: <<-SCRIPT
     apt-get update
-    apt-get install -y build-essential python-dev python-pip python-zmq mongodb
-    pip install tornado Twisted pycountry
-    easy_install pymongo websocket behave 
-    cp -R /vagrant/ecdsa /vagrant/pyelliptic /vagrant/obelisk /usr/local/lib/python2.7/dist-packages/
+    apt-get install -y build-essential python-dev python-pip python-zmq mongodb libjpeg-dev tor privoxy gnupg
+    pip install tornado Twisted pycountry pillow python-gnupg mock
+    easy_install pymongo websocket behave
+    cp -R /vagrant/ecdsa /vagrant/obelisk /usr/local/lib/python2.7/dist-packages/
     mongo --eval "db = db.getSiblingDB('openbazaar')"
+    pip install pyelliptic
+    /etc/init.d/tor restart
   SCRIPT
 
   # Create a private network, which allows host-only access to the machine
@@ -50,6 +53,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine.
   config.vm.network "forwarded_port", guest: 8888, host: 8888
+  config.vm.network "forwarded_port", guest: 8889, host: 8889
+  config.vm.network "forwarded_port", guest: 8890, host: 8890
+  config.vm.network "forwarded_port", guest: 12345, host: 12345
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.

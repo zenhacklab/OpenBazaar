@@ -11,10 +11,11 @@ import zmq
 
 ioloop.install()
 import tornado
-from protocol import goodbye
+from protocol import goodbye, hello_request
 import network_util
 from urlparse import urlparse
-import sys
+import sys, time, random
+from ws import ProtocolHandler
 
 
 class PeerConnection(object):
@@ -23,6 +24,7 @@ class PeerConnection(object):
         self._timeout = 10
         self._transport = transport
         self._address = address
+        self._responses_received = {}
         self._log = logging.getLogger('[%s] %s' % (self._transport._market_id, self.__class__.__name__))
         self.create_socket()
 
@@ -45,18 +47,33 @@ class PeerConnection(object):
 
         self._stream.send(serialized)
 
+        # Generate message ID
+        message_id = random.randint(0, 1000000)
+
+        self._responses_received[message_id] = False
+
         def cb(msg):
-            self.on_message(msg)
+            self._log.debug('callback received: %s ' % message_id)
+            if self._responses_received.has_key(message_id):
+                del self._responses_received[message_id]
+
+            #XXX: Might be a good idea to remove peer if pubkey changes. This
+            # should be handled in CrytpoPeerConnection.
             if callback is not None:
                 callback(msg)
 
         self._stream.on_recv(cb)
 
+        def remove_dead_peer():
+            self._log.debug('Responses Received: %s' % self._responses_received)
 
-    def on_message(self, msg, callback=lambda msg: None):
-        #self._log.info("Message received: %s" % msg)
-        callback()
+            if self._responses_received.has_key(message_id):
+                del self._responses_received[message_id]
+                self._log.info('Peer\'s zeromq not listening it seems. %s' % message_id)
+                callback(False)
 
+        # Set timer for checking if peer alive
+        ioloop.IOLoop.instance().add_timeout(time.time() + 10, remove_dead_peer)
 
 # Transport layer manages a list of peers
 class TransportLayer(object):
@@ -71,28 +88,25 @@ class TransportLayer(object):
         self._uri = 'tcp://%s:%s' % (self._ip, self._port)
 
         self._log = logging.getLogger('[%s] %s' % (market_id, self.__class__.__name__))
-        # signal.signal(signal.SIGTERM, lambda x, y: self.broadcast_goodbye())
 
     def add_callback(self, section, callback):
         self._callbacks[section].append(callback)
 
     def trigger_callbacks(self, section, *data):
+        # Run all callbacks in specified section
         for cb in self._callbacks[section]:
             cb(*data)
+
+        # Run all callbacks registered under the 'all' section. Don't duplicate
+        # calls if the specified section was 'all'.
         if not section == 'all':
             for cb in self._callbacks['all']:
                 cb(*data)
 
     def get_profile(self):
-        return {'type': 'hello_request', 'uri': self._uri}
+        return hello_request({ 'uri': self._uri })
 
     def listen(self, pubkey):
-        #t = Thread(target=self._listen, args=(pubkey,))
-        #t.setDaemon(True)
-        #t.start()
-        self._listen(pubkey)
-
-    def _listen(self, pubkey):
         self._log.info("Listening at: %s:%s" % (self._ip, self._port))
         ctx = zmq.Context()
         socket = ctx.socket(zmq.REP)
@@ -104,30 +118,16 @@ class TransportLayer(object):
         else:
             socket.bind('tcp://*:%s' % self._port)
 
-        #while True:
-
         stream = zmqstream.ZMQStream(socket, io_loop=ioloop.IOLoop.current())
 
         def handle_recv(message):
             for msg in message:
-                self.on_raw_message(msg)
-
-
+                self._on_raw_message(msg)
 
             self._log.info('Sending back OK')
-            #self._socket.send(json.dumps({'type': 'ok', 'senderGUID': self._guid, 'pubkey': pubkey}), flags=zmq.NOBLOCK)
             stream.send(json.dumps({'type': 'ok', 'senderGUID': self._guid, 'pubkey': pubkey}))
 
         stream.on_recv(handle_recv)
-
-            # t = Thread(target=self.handle_raw_message, args=(message,))
-            # t.setDaemon(True)
-            # t.start()
-
-
-
-    def handle_raw_message(self, message):
-        self.on_raw_message(message)
 
     def closed(self, *args):
         self._log.info("client left")
@@ -136,7 +136,7 @@ class TransportLayer(object):
         uri = msg['uri']
 
         if uri not in self._peers:
-            self._peers[uri] = CryptoPeerConnection(self, uri)
+            self._peers[uri] = PeerConnection(self, uri)
 
     def remove_peer(self, uri, guid):
         self._log.info("Removing peer %s", uri)
@@ -161,28 +161,15 @@ class TransportLayer(object):
         #     self._log.info("Peer %s was already removed", uri)
 
 
-    def send(self, data, send_to=None):
+    def send(self, data, send_to=None, callback=lambda msg: None):
 
-        self._log.info("Outgoing Data: %s" % data)
+        self._log.info("Outgoing Data: %s %s" % (data, send_to))
 
         # Directed message
         if send_to is not None:
-
             peer = self._dht._routingTable.getContact(send_to)
-
-            new_peer = self._dht._transport.get_crypto_peer(peer._guid, peer._address, peer._pub)
-
-            new_peer.send(data)
-            # for peer in self._dht._activePeers:
-            #
-            #     if peer._guid == send_to:
-            #         self._log.info('Found a matching peer: %s' % peer._guid)
-            #
-            #
-            #         peer.send(data)
-            #
-            #         self._log.debug('Sent message: %s ' % data)
-
+            #self._log.debug('%s %s %s' % (peer._guid, peer._address, peer._pub))
+            peer.send(data, callback=callback)
             return
 
         else:
@@ -190,14 +177,12 @@ class TransportLayer(object):
 
             for peer in self._dht._activePeers:
                 try:
-
-
                     data['senderGUID'] = self._guid
                     if peer._pub:
-                        peer.send(data)
+                        peer.send(data, callback)
                     else:
                         serialized = json.dumps(data)
-                        peer.send_raw(serialized)
+                        peer.send_raw(serialized, callback)
                 except:
                     self._log.info("Error sending over peer!")
                     traceback.print_exc()
@@ -207,7 +192,7 @@ class TransportLayer(object):
         msg = goodbye({'uri': self._uri})
         self.send(msg)
 
-    def on_message(self, msg):
+    def _on_message(self, msg):
 
         # here goes the application callbacks
         # we get a "clean" msg which is a dict holding whatever
@@ -220,7 +205,7 @@ class TransportLayer(object):
             self.trigger_callbacks(msg['type'], msg)
 
 
-    def on_raw_message(self, serialized):
+    def _on_raw_message(self, serialized):
         self._log.info("connected " + str(len(serialized)))
         try:
             msg = json.loads(serialized[0])
@@ -230,9 +215,9 @@ class TransportLayer(object):
 
         msg_type = msg.get('type')
         if msg_type == 'hello_request' and msg.get('uri'):
-            self.init_peer(msg)
+            self._init_peer(msg)
         else:
-            self.on_message(msg)
+            self._on_message(msg)
 
     def valid_peer_uri(self, uri):
         try:

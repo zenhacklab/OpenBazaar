@@ -51,6 +51,7 @@ class KBucket(object):
         self._log.debug('Looking for %s in bucket MIN: %s MAX: %s' % (contactID, self.rangeMin, self.rangeMax))
         for contact in self._contacts:
           if contact._guid == contactID:
+            self._log.debug('%s %s %s' % (contact._pub, contact._guid, contact._address))
             return contact
 
     def getContacts(self, count=-1, excludeContact=None):
@@ -110,7 +111,9 @@ class KBucket(object):
 
         @raise ValueError: The specified contact is not in this bucket
         """
-        self._contacts.remove(contact)
+        self._log.debug('Contacts %s %s' % (contact, self._contacts))
+        self._contacts[:] = [x for x in self._contacts if x._guid != contact]
+        self._log.debug('Contacts %s %s' % (contact, self._contacts))
 
     def keyInRange(self, key):
         """ Tests whether the specified key (i.e. node ID) is in the range
