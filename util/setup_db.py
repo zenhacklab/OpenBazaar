@@ -14,6 +14,7 @@ DB_PATH = "db/ob.db"
 # TODO: Move DB_PATH to constants file. 
 # TODO: Use actual foreign keys.
 # TODO: Use indexes.
+# TODO: Maybe it makes sense to put tags on a different table
 
 if not path.isfile(DB_PATH):
     con = sqlite3.connect(DB_PATH)
@@ -28,6 +29,19 @@ if not path.isfile(DB_PATH):
                     "originallyPublisherID INT, " \
                     "secret TEXT)")
 
+        cur.execute("CREATE TABLE contracts(" \
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "market_id INT, " \
+                    "item_images TEXT, " \
+                    "contract_body TEXT, " \
+                    "signed_contract_body TEXT, " \
+                    "unit_price INT, " \
+                    "item_title TEXT, " \
+                    "item_desc TEXT, " \
+                    "item_quantity_available, " \
+                    "state TEXT, " \
+                    "key TEXT)")
+
         cur.execute("CREATE TABLE products(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
                     "market_id INT, "
@@ -39,7 +53,6 @@ if not path.isfile(DB_PATH):
                     "productQuantity INT, " \
                     "productTags TEXT, " \
                     "key TEXT)")
-        #TODO: Maybe it makes sense to put tags on a different table
 
         cur.execute("CREATE TABLE orders(" \
                     "id INTEGER PRIMARY KEY " \
@@ -58,22 +71,26 @@ if not path.isfile(DB_PATH):
                     "market_id INT, " \
                     "nickname TEXT, " \
                     "secret TEXT, " \
-                    "pubKey TEXT, " \
+                    "pubkey TEXT, " \
                     "guid TEXT, " \
                     "email TEXT, " \
                     "pgpPubKey TEXT, " \
+                    "PGPPubkeyFingerprint TEXT, " \
                     "bcAddress TEXT, " \
                     "bitmessage TEXT, " \
                     "storeDescription TEXT, " \
                     "street1 TEXT, " \
                     "street2 TEXT, " \
                     "city TEXT, " \
+                    "stateRegion TEXT, " \
                     "stateProvinceRegion TEXT, " \
                     "zip TEXT, " \
                     "country TEXT, " \
+                    "countryCode TEXT, " \
                     "welcome TEXT, " \
                     "arbiter INT, " \
-                    "arbiterDescription TEXT)")
+                    "arbiterDescription TEXT, "\
+                    "notary TEXT)")
 
         cur.execute("CREATE TABLE escrows(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
