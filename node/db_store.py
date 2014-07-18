@@ -153,5 +153,6 @@ class Obdb():
                     where_part = where_part + ", %s = '%s'" % (key, value)
             query = "DELETE FROM %s WHERE %s" \
                     % (table, where_part)
+            self._log.info('query: %s' % query)
             cur.execute(query)
         self._disconnectFromDb()
