@@ -1,7 +1,6 @@
+*.db
 
 *.log
-
-*.db
 
 html/less/.DS_Store
 
@@ -44,3 +43,11 @@ blockchain
 .idea/inspectionProfiles/profiles_settings.xml
 
 .idea/inspectionProfiles/Project_Default.xml
+
+*.swp
+
+*.gpg
+
+gpg/random_seed
+
+*.gpg~
