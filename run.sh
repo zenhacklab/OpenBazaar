@@ -95,6 +95,18 @@ if [ ! -d "$LOGDIR" ]; then
   mkdir $LOGDIR
 fi
 
+# Location of db directory
+DBDIR=db
+# Name of db file
+DBFILE=ob.db
+
+if [ ! -d "$DBDIR" ]; then
+  mkdir $DBDIR
+fi
+
+if [ ! -f $DBDIR/$DBFILE ]; then
+    $PYTHON util/setup_db.py
+fi
 
 if [ $DEVELOPMENT == 0 ]; then
 	$PYTHON node/tornadoloop.py $SERVER_IP -s $SEED_URI -p $SERVER_PORT --bmuser $BM_USERNAME --bmpass $BM_PASSWORD --bmport $BM_PORT -l $LOGDIR/production.log -u 1 &
