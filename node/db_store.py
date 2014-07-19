@@ -66,6 +66,8 @@ class Obdb():
             cur = self.con.cursor()
             first = True
             for key, value in set_dict.iteritems():
+                key = str(key).replace("'","''");
+                value = str(value).replace("'","''");
                 if first:
                     set_part = "%s = '%s'" % (key, value)
                     first = False
@@ -73,6 +75,8 @@ class Obdb():
                     set_part = set_part + ", %s = '%s'" % (key, value)
             first = True
             for key, value in where_dict.iteritems():
+                key = key.replace("'","''");
+                value = value.replace("'","''");
                 if first: 
                     where_part = "%s = '%s'" % (key, value)
                     first = False
@@ -94,6 +98,8 @@ class Obdb():
             cur = self.con.cursor()
             first = True
             for key, value in update_dict.iteritems():
+                key = str(key).replace("'","''");
+                value = str(value).replace("'","''");
                 if first: 
                     updatefield_part = "%s" % (key)
                     setfield_part = "'%s'" % (value)
@@ -107,7 +113,7 @@ class Obdb():
             self._log.info("query: %s "% query)
         self._disconnectFromDb()
 
-    def selectEntries(self, table, where_dict={"'1'":"1"}, operator="AND", order_field="id", order="ASC"):
+    def selectEntries(self, table, where_dict={"\"1\"":"1"}, operator="AND", order_field="id", order="ASC"):
         """ A wrapper for the SQL SELECT operation. It will always return all the 
             attributes for the selected rows.
         @param table: The table to search to
@@ -119,6 +125,8 @@ class Obdb():
             cur = self.con.cursor()
             first = True
             for key, value in where_dict.iteritems():
+                key = str(key).replace("'","''");
+                value = str(value).replace("'","''");
                 if first: 
                     where_part = "%s = '%s'" % (key, value)
                     first = False
@@ -132,7 +140,7 @@ class Obdb():
         self._disconnectFromDb()
         return rows
 
-    def deleteEntries(self, table, where_dict={"'1'":"1"}):
+    def deleteEntries(self, table, where_dict={"\"1\"":"1"}):
         """ A wrapper for the SQL DELETE operation. It will always return all the 
             attributes for the selected rows.
         @param table: The table to search to
@@ -146,6 +154,8 @@ class Obdb():
             cur = self.con.cursor()
             first = True
             for key, value in where_dict.iteritems():
+                key = str(key).replace("'","''");
+                value = str(value).replace("'","''");
                 if first: 
                     where_part = "%s = '%s'" % (key, value)
                     first = False
