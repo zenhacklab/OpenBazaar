@@ -120,7 +120,6 @@ class MongoDataStore(DataStore):
 
     def keys(self):
         """ Return a list of the keys in this data store """
-        print "here"
         keys = []
         try:
             #db_keys = self._db.data.find({}, { 'key':1 })
