@@ -11,6 +11,7 @@ import UserDict
 import logging
 
 from pymongo import MongoClient
+from db_store import Obdb 
 
 
 class DataStore(UserDict.DictMixin):
@@ -112,17 +113,22 @@ class MongoDataStore(DataStore):
     """
     def __init__(self):
         MONGODB_URI = 'mongodb://localhost:27017'
-        _dbclient = MongoClient()
-        self._db = _dbclient.openbazaar
+        #_dbclient = MongoClient()
+        #self._db = _dbclient.openbazaar
+        self._db = Obdb()
         self._log = logging.getLogger(self.__class__.__name__)
 
     def keys(self):
         """ Return a list of the keys in this data store """
+        print "here"
         keys = []
         try:
-            db_keys = self._db.data.find({}, { 'key':1 })
+            #db_keys = self._db.data.find({}, { 'key':1 })
+            db_keys = self._db.selectEntries("datastore")
 
             for row in db_keys:
+                if row["key"] == 1:
+                    continue
                 keys.append(row['key'].decode('hex'))
 
         finally:
@@ -152,12 +158,21 @@ class MongoDataStore(DataStore):
 
     def setItem(self, key, value, lastPublished, originallyPublished, originalPublisherID, market_id=1):
 
-        row = self._db.data.update({'key':key, 'market_id':market_id}, {'key':key,
+       # row = self._db.data.update({'key':key, 'market_id':market_id}, {'key':key,
+       #                                                 'value':value,
+       #                                                 'lastPublished':lastPublished,
+       #                                                 'originallyPublished':originallyPublished,
+       #                                                 'originalPublisherID':originalPublisherID,
+       #                                                 'market_id':market_id}, True)
+
+       row = self._db.updateEntries("datastore", {'key':key, 'market_id':market_id}, {'key':key,
                                                         'value':value,
                                                         'lastPublished':lastPublished,
                                                         'originallyPublished':originallyPublished,
                                                         'originalPublisherID':originalPublisherID,
-                                                        'market_id':market_id}, True)
+                                                        'market_id':market_id})
+
+
 
         # if self._cursor.fetchone() == None:
         #     self._cursor.execute('INSERT INTO data(key, value, lastPublished, originallyPublished, originalPublisherID) VALUES (?, ?, ?, ?, ?)', (encodedKey, buffer(pickle.dumps(value, pickle.HIGHEST_PROTOCOL)), lastPublished, originallyPublished, originalPublisherID))
@@ -165,9 +180,12 @@ class MongoDataStore(DataStore):
         #     self._cursor.execute('UPDATE data SET value=?, lastPublished=?, originallyPublished=?, originalPublisherID=? WHERE key=?', (buffer(pickle.dumps(value, pickle.HIGHEST_PROTOCOL)), lastPublished, originallyPublished, originalPublisherID, encodedKey))
 
     def _dbQuery(self, key, columnName):
-        row = self._db.data.find_one({ 'key':key}, {columnName:1})
-        if row is not None:
-            value = row[columnName]
+        print "query"
+        #row = self._db.data.find_one({ 'key':key}, {columnName:1})
+        row = self._db.selectEntries("datastore", {"key": key})
+        #if row is not None:
+        if len(row) != 0:
+            value = row[0][columnName]
             return value
 
 
@@ -175,4 +193,5 @@ class MongoDataStore(DataStore):
         return self._dbQuery(key, 'value')
 
     def __delitem__(self, key):
-        self._db.data.remove({'key':key.encode('hex')})
+        #self._db.data.remove({'key':key.encode('hex')})
+        self._db.deleteEntries("datastore", {"key": key.encode("hex")})

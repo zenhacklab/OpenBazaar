@@ -104,3 +104,12 @@ if not path.isfile(DB_PATH):
                     "signature TEXT, " \
                     "text TEXT, " \
                     "rating INT)")
+
+        cur.execute("CREATE TABLE datastore(" \
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
+                    "market_id INT, " \
+                    "key TEXT, " \
+                    "lastPublished TEXT, " \
+                    "originallyPublished TEXT, " \
+                    "originalPublisherID TEXT, " \
+                    "value TEXT)")
