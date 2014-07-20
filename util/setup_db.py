@@ -74,7 +74,7 @@ if not path.isfile(DB_PATH):
                     "pubkey TEXT, " \
                     "guid TEXT, " \
                     "email TEXT, " \
-                    "pgpPubKey TEXT, " \
+                    "PGPPubKey TEXT, " \
                     "PGPPubkeyFingerprint TEXT, " \
                     "bcAddress TEXT, " \
                     "bitmessage TEXT, " \
