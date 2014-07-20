@@ -164,12 +164,13 @@ class MongoDataStore(DataStore):
        #                                                 'originalPublisherID':originalPublisherID,
        #                                                 'market_id':market_id}, True)
 
-       row = self._db.updateEntries("datastore", {'key':key, 'market_id':market_id}, {'key':key,
-                                                        'value':value,
-                                                        'lastPublished':lastPublished,
-                                                        'originallyPublished':originallyPublished,
-                                                        'originalPublisherID':originalPublisherID,
-                                                        'market_id':market_id})
+
+        rows = self._db.selectEntries("datastore", {'key':key, 'market_id': market_id})
+        if len(rows) == 0:
+            # FIXME: Wrap text.
+            row = self._db.insertEntry("datastore", {'key':key, 'market_id':market_id, 'key':key, 'value':value, 'lastPublished':lastPublished, 'originallyPublished':originallyPublished, 'originalPublisherID':originalPublisherID, 'market_id':market_id})
+        else:
+            row = self._db.updateEntries("datastore", {'key':key, 'market_id':market_id}, {'key':key, 'value':value, 'lastPublished':lastPublished, 'originallyPublished':originallyPublished, 'originalPublisherID':originalPublisherID, 'market_id':market_id})
 
 
 

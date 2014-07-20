@@ -301,9 +301,11 @@ class Market(object):
 
         # Calculate index of contracts
 
-        contract_ids = self._db.selectEntries("contracts", {"market_id": self._transport._market_id, 'key':1})
+        contract_ids = self._db.selectEntries("contracts", {"market_id": self._transport._market_id})
         my_contracts = []
         for contract_id in contract_ids:
+            if contract_id == 1:
+                continue
             my_contracts.append(contract_id['key'])
 
         self._log.debug('My Contracts: %s' % my_contracts)
