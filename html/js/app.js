@@ -79,6 +79,8 @@ angular.module('app')
   }
 
 
+
+
  // Open the websocket connection and handle messages
   var socket = new Connection(function(msg) {
 
@@ -119,6 +121,9 @@ angular.module('app')
          break;
       case 'new_listing':
          $scope.parse_new_listing(msg)
+         break;
+      case 'global_search_result':
+         $scope.parse_search_result(msg)
          break;
       case 'orderinfo':
          $scope.parse_orderinfo(msg)
@@ -220,9 +225,7 @@ angular.module('app')
 
   $scope.parse_myorders = function(msg) {
 
-
   	  $scope.orders = msg['orders'];
-
 
       if (!$scope.$$phase) {
 	       $scope.$apply();
@@ -235,6 +238,17 @@ angular.module('app')
       console.log(msg);
 
       $scope.contracts = msg.contracts.contracts;
+      for(var key in msg.contracts.contracts) {
+
+        var obj = msg.contracts.contracts[key];
+        for (var prop in obj) {
+            if (prop == 'item_images' && jQuery.isEmptyObject(msg.contracts.contracts[key].item_images)) {
+                msg.contracts.contracts[key].item_images = "img/no-photo.png";
+            }
+
+        }
+
+      }
 
       $scope.contract2 = {};
       if (!$scope.$$phase) {
@@ -436,6 +450,7 @@ angular.module('app')
     console.log(msg.data);
     contract_data = msg.data;
     contract_data.key = msg.key;
+    contract_data.rawContract = msg.rawContract;
     $scope.store_listings.push(contract_data)
     $scope.store_listings = jQuery.unique($scope.store_listings);
     $.each( $scope.store_listings, function(index, contract){
@@ -451,10 +466,35 @@ angular.module('app')
     }
   }
 
+  $scope.search_results = [];
+  $scope.parse_search_result = function(msg) {
+    console.log(msg.data);
+    contract_data = msg.data;
+    contract_data.key = msg.key;
+    contract_data.rawContract = msg.rawContract;
+    $scope.search_results.push(contract_data)
+    $scope.search_results = jQuery.unique($scope.search_results);
+    $.each( $scope.search_results, function(index, contract){
+        if (jQuery.isEmptyObject(contract.Contract.item_images)) {
+            console.log('empty object');
+            contract.Contract.item_images = "img/no-photo.png";
+        }
+    });
+
+    console.log('Search Results',$scope.search_results)
+    $scope.showDashboardPanel('search');
+
+
+    if (!$scope.$$phase) {
+       $scope.$apply();
+    }
+  }
+
   $scope.search = ""
   $scope.searchNetwork = function() {
      var query = {'type': 'search', 'key': $scope.search };
      $scope.searching = $scope.search;
+     $scope.search_results = [];
      $scope.awaitingShop = $scope.search;
      socket.send('search', query)
      $scope.search = ""
@@ -467,7 +507,10 @@ angular.module('app')
                       secret:'',
                       nickname:'',
                       welcome:'',
-                      escrowAddresses:''}
+                      trustedArbiters:{},
+                      trustedNotaries:{}
+                    }
+
   $scope.saveSettings = function() {
       var query = {'type': 'update_settings', settings: $scope.settings }
       socket.send('update_settings', query);
@@ -532,24 +575,79 @@ angular.module('app')
   }
 
 
-  $scope.addEscrow = function() {
-    escrowAddress = $('#inputEscrowAddress').val();
-    $('#inputEscrowAddress').val('');
+  $scope.addArbiter = function() {
+    arbiterGUID = $('#inputArbiterGUID').val();
+    $('#inputArbiterGUID').val('');
 
-    // TODO: Check for valid escrow address
-
-    if(!$scope.settings.escrowAddresses) {
-      $scope.settings.escrowAddresses = [];
+    // TODO: Check for valid arbiter GUID
+    if(arbiterGUID.length != 38 || !arbiterGUID.match(/^[0-9a-zA-Z]+$/)) {
+        alert('Incorrect format for GUID');
+        return;
     }
-    $scope.settings.escrowAddresses.push(escrowAddress);
 
-    // Dedupe escrow addresses
-    var uniqueEscrows = [];
-    $.each($scope.settings.escrowAddresses, function(i, el){
-        if($.inArray(el, uniqueEscrows) === -1) uniqueEscrows.push(el);
+    if(!$scope.settings.trustedArbiters) {
+      $scope.settings.trustedArbiters = [];
+    }
+    $scope.settings.trustedArbiters.push(arbiterGUID);
+
+    // Dedupe arbiter GUIDs
+    var uniqueArbiters = [];
+    $.each($scope.settings.trustedArbiters, function(i, el){
+        if($.inArray(el, uniqueArbiters) === -1) uniqueArbiters.push(el);
     });
 
-    $scope.settings.escrowAddresses = uniqueEscrows;
+    $scope.settings.trustedArbiters = uniqueArbiters;
+
+    $scope.saveSettings();
+  }
+
+  $scope.removeArbiter = function(arbiterGUID) {
+
+    // Dedupe arbiter GUIDs
+    var uniqueArbiters = $scope.settings.trustedArbiters;
+    $.each($scope.settings.trustedArbiters, function(i, el){
+        if(el == arbiterGUID) uniqueArbiters.splice(i, 1);
+    });
+
+    $scope.settings.trustedArbiters = uniqueArbiters;
+
+    $scope.saveSettings();
+  }
+
+  $scope.addNotary = function() {
+    notaryGUID = $('#inputNotaryGUID').val();
+    $('#inputNotaryGUID').val('');
+
+    if(notaryGUID.length != 40 || !notaryGUID.match(/^[0-9a-z]+$/)) {
+        alert('Incorrect format for GUID');
+        return;
+    }
+
+    if(!$scope.settings.notaries) {
+      $scope.settings.notaries = [];
+    }
+    $scope.settings.notaries.push(notaryGUID);
+
+    // Dedupe notary GUIDs
+    var uniqueNotaries = [];
+    $.each($scope.settings.notaries, function(i, el){
+        if($.inArray(el, uniqueNotaries) === -1) uniqueNotaries.push(el);
+    });
+
+    $scope.settings.notaries = uniqueNotaries;
+
+    $scope.saveSettings();
+  }
+
+  $scope.removeNotary = function(notaryGUID) {
+
+    // Dedupe notary GUIDs
+    var uniqueNotaries = $scope.settings.notaries;
+    $.each($scope.settings.notaries, function(i, el){
+        if(el == notaryGUID) uniqueNotaries.splice(i, 1);
+    });
+
+    $scope.settings.notaries = uniqueNotaries;
 
     $scope.saveSettings();
   }
@@ -562,6 +660,7 @@ angular.module('app')
     $scope.arbitrationPanel = false;
   	$scope.ordersPanel = false;
   	$scope.myInfoPanel = false;
+  	$scope.searchPanel = false;
   }
 
   $scope.showDashboardPanel = function(panelName) {
@@ -603,6 +702,9 @@ angular.module('app')
   			break;
   		case 'myInfo':
   			$scope.myInfoPanel = true;
+  			break;
+  		case 'search':
+  			$scope.searchPanel = true;
   			break;
 
   	}
@@ -855,6 +957,7 @@ $scope.ProductModal = function ($scope, $modal, $log) {
         }
       });
 
+
       modalInstance.result.then(function (selectedItem) {
         $scope.selected = selectedItem;
       }, function () {
@@ -869,7 +972,11 @@ $scope.ProductModal = function ($scope, $modal, $log) {
 var ProductModalInstance = function ($scope, $modalInstance, contract) {
 
   $scope.contract = contract;
+  $scope.contract.productQuantity = 1;
   $scope.contract.productCondition = 'New';
+
+
+
 
     $scope.createContract = function() {
 
@@ -917,7 +1024,7 @@ var ProductModalInstance = function ($scope, $modalInstance, contract) {
 
             keywords = ($scope.contract.productKeywords) ? $scope.contract.productKeywords.split(',') : []
             $.each(keywords, function(i, el){
-                if($.inArray(el, contract.Contract.item_keywords) === -1) contract.Contract.item_keywords.push(el);
+                if($.inArray(el.trim(), contract.Contract.item_keywords) === -1 && el.trim() != '') contract.Contract.item_keywords.push(el.trim());
             });
 
             var imgUpload = document.getElementById('inputProductImage').files[0];
@@ -959,61 +1066,9 @@ var ProductModalInstance = function ($scope, $modalInstance, contract) {
                 socket.send("query_contracts", {})
 
             }
-
-
         }
-
         $modalInstance.dismiss('cancel');
-
-
     }
-
-  $scope.saveProduct = function () {
-
-    var imgUpload = document.getElementById('inputProductImage').files[0];
-
-    if(imgUpload) {
-
-      if (imgUpload.type != '' && $.inArray(imgUpload.type, ['image/jpeg', 'image/gif', 'image/png']) != -1) {
-
-        var r = new FileReader();
-        r.onloadend = function(e){
-          var data = e.target.result;
-
-          $scope.product.productImageName = imgUpload.name;
-          $scope.product.productImageData = imgUpload.result;
-          console.log(imgUpload);
-
-          console.log('SAVED:',$scope.product);
-          socket.send("save_product", $scope.product)
-          socket.send("query_contracts", {})
-
-          $modalInstance.dismiss('cancel');
-
-
-        }
-        r.readAsArrayBuffer(imgUpload);
-
-      } else {
-        console.log('SAVED:',$scope.product);
-        socket.send("save_product", $scope.product)
-        socket.send("query_contracts", {})
-
-        $modalInstance.dismiss('cancel');
-      }
-
-    } else {
-
-      console.log('SAVED:',$scope.product);
-      socket.send("save_product", $scope.product)
-      socket.send("query_contracts", {})
-
-      $modalInstance.dismiss('cancel');
-    }
-
-
-
-  };
 
   $scope.cancel = function () {
     socket.send("query_contracts", {});
@@ -1021,19 +1076,18 @@ var ProductModalInstance = function ($scope, $modalInstance, contract) {
   };
 
   $scope.toggleItemAdvanced = function() {
-
     $scope.itemAdvancedDetails = ($scope.itemAdvancedDetails) ? 0 : 1;
   }
-
-
-
-
 };
 
 
 $scope.BuyItemCtrl = function ($scope, $modal, $log) {
 
-    $scope.open = function (size, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key) {
+    $scope.open = function (size, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key, rawContract,
+        notaries, arbiters) {
+
+
+
 
 
 
@@ -1050,7 +1104,10 @@ $scope.BuyItemCtrl = function ($scope, $modal, $log) {
             productPrice: function() { return productPrice},
             productDescription: function() { return productDescription},
             productImageData: function() { return productImageData},
-            key: function() { return key }
+            key: function() { return key },
+            rawContract: function() { return rawContract },
+            notaries: function() { return notaries },
+            arbiters: function() { return arbiters }
         },
         size: size
       });
@@ -1071,9 +1128,12 @@ $scope.BuyItemCtrl = function ($scope, $modal, $log) {
   };
 
 
-$scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key) {
+$scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantPubkey, productTitle, productPrice, productDescription, productImageData, key,
+    rawContract,
+    notaries,
+    arbiters) {
 
-    console.log(productTitle, productPrice, productDescription, productImageData);
+    console.log(productTitle, productPrice, productDescription, productImageData, rawContract, notaries, arbiters);
     $scope.myself = myself;
     $scope.merchantPubkey = merchantPubkey;
     $scope.productTitle = productTitle;
@@ -1082,9 +1142,16 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
     $scope.productImageData = productImageData;
     $scope.totalPrice = productPrice;
     $scope.productQuantity = 1;
+    $scope.rawContract = rawContract;
+    $scope.notaries = notaries;
+    $scope.arbiters = arbiters;
+
     $scope.key = key;
 
-    console.log($scope);
+    $scope.update = function(user) {
+        console.log('Updated');
+    };
+
 
     $scope.ok = function () {
       $modalInstance.close();
@@ -1100,10 +1167,26 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
         $('#totalPrice').html(newPrice);
     }
 
-    $scope.order = {message:'', tx: '', listingKey:key, listingTotal:'', productTotal:'', productQuantity:1}
+    $scope.gotoStep2 = function() {
+        $scope.order.step2 = 1;
+        if (!$scope.$$phase) {
+           $scope.$apply();
+        }
+    }
+
+    $scope.gotoStep1 = function() {
+        $scope.order.step2 = '';
+        if (!$scope.$$phase) {
+           $scope.$apply();
+        }
+    }
+
+
+    $scope.order = {message:'', tx: '', listingKey:key, listingTotal:'', productTotal:'', productQuantity:1, rawContract:rawContract}
+    $scope.order.notary = $scope.notaries[0];
+    $scope.order.arbiter = $scope.arbiters[0];
+
     $scope.submitOrder = function() {
-
-
 
       $scope.creatingOrder = false;
 
@@ -1113,7 +1196,10 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
           'buyer': $scope.myself.pubkey,
           'seller': $scope.merchantPubkey,
           'listingKey': $scope.key,
-          'orderTotal': $('#totalPrice').html()
+          'orderTotal': $('#totalPrice').html(),
+          'rawContract': rawContract,
+          'notary': $scope.order.notary,
+          'arbiter': $scope.order.arbiter
       }
       console.log(newOrder);
       socket.send('order', newOrder);
@@ -1178,7 +1264,7 @@ $scope.ComposeMessageInstanceCtrl = function ($scope, $modalInstance, myself, my
     // Fill in form if msg is passed - reply mode
     if(msg != null) {
         $scope.toAddress = msg.fromAddress;
-        // Make sure subject start with RE: 
+        // Make sure subject start with RE:
         var sj = msg.subject;
         if(sj.match(/^RE:/) == null) {
             sj = "RE: " + sj;
@@ -1200,7 +1286,7 @@ $scope.ComposeMessageInstanceCtrl = function ($scope, $modalInstance, myself, my
       }
 
       var query = {'type': 'send_message', 'to': toAddress.value,
-                   'subject': subject.value, 
+                   'subject': subject.value,
                    'body': body.value}
       console.log('sending message with subject ' + subject)
       socket.send('send_message', query)
@@ -1213,15 +1299,5 @@ $scope.ComposeMessageInstanceCtrl = function ($scope, $modalInstance, myself, my
     };
 };
 
-$scope.ViewMessageInstanceCtrl = function ($scope, $modalInstance, myself, my_address, msg) {
-
-    $scope.myself = myself;
-    $scope.my_address = my_address;
-    $scope.msg = msg;
-
-    $scope.close = function () {
-      $modalInstance.dismiss('cancel');
-    };
-};
 
 }])
