@@ -18,7 +18,6 @@ from pprint import pprint
 ioloop.install()
 import time
 
-import tornado
 
 
 class CryptoPeerConnection(PeerConnection):
@@ -36,6 +35,7 @@ class CryptoPeerConnection(PeerConnection):
 
         if guid is not None:
             self._guid = guid
+            self._sin = obelisk.EncodeBase58Check('\x0F\x02%s' + self._guid.decode('hex'))
             callback(None)
         else:
             def cb(msg):
@@ -44,6 +44,7 @@ class CryptoPeerConnection(PeerConnection):
                     msg = msg[0]
                     msg = json.loads(msg)
                     self._guid = msg['senderGUID']
+                    self._sin = obelisk.EncodeBase58Check('\x0F\x02%s' + self._guid.decode('hex'))
                     self._pub = msg['pubkey']
 
                     self._log.debug('New Crypt Peer: %s %s %s' % (self._address, self._pub, self._guid))
@@ -147,7 +148,7 @@ class CryptoTransportLayer(TransportLayer):
         result = False
         try:
             self._log.info('Connecting to Bitmessage on Port %s %s %s' % (bm_port, bm_user, bm_pass))
-            self._bitmessage_api = xmlrpclib.ServerProxy("http://{}:{}@localhost:{}/".format(bm_user, bm_pass, bm_port), verbose=1)
+            self._bitmessage_api = xmlrpclib.ServerProxy("http://{}:{}@localhost:{}/".format(bm_user, bm_pass, bm_port), verbose=0)
             result = self._bitmessage_api.add(2,3)
             self._log.info("Bitmessage test result: {}, API is live".format(result))
         # If we failed, fall back to starting our own
@@ -227,6 +228,7 @@ class CryptoTransportLayer(TransportLayer):
             self.nickname = self.settings['nickname'] if self.settings.has_key("nickname") else ""
             self.secret = self.settings['secret'] if self.settings.has_key("secret") else ""
             self.pubkey = self.settings['pubkey'] if self.settings.has_key("pubkey") else ""
+            self.sin = self.settings['sin'] if self.settings.has_key("sin") else ""
             self.guid = self.settings['guid'] if self.settings.has_key("guid") else ""
             self.bitmessage = self.settings['bitmessage'] if self.settings.has_key('bitmessage') else ""
 
@@ -268,10 +270,14 @@ class CryptoTransportLayer(TransportLayer):
       self.pubkey = pubkey.encode('hex')
       self._myself = key
 
-      # Generate a node ID by ripemd160 hashing the signed pubkey
-      guid = hashlib.new('ripemd160')
-      guid.update(signedPubkey)
-      self.guid = guid.digest().encode('hex')
+      # Generate SIN
+      sha_hash = hashlib.sha256()
+      sha_hash.update(pubkey)
+      ripe_hash = hashlib.new('ripemd160')
+      ripe_hash.update(sha_hash.digest())
+
+      self.guid = ripe_hash.digest().encode('hex')
+      self.sin = obelisk.EncodeBase58Check('\x0F\x02%s' + ripe_hash.digest())
 
       #self._db.settings.update({"id":'%s' % self._market_id}, {"$set": {"secret":self.secret, "pubkey":self.pubkey, "guid":self.guid}}, True)
 
@@ -289,7 +295,7 @@ class CryptoTransportLayer(TransportLayer):
     def join_network(self, seed_uri, callback=lambda msg: None):
 
         if seed_uri:
-            self._log.info('Initializing Seed Peer(s): [%s]' % (seed_uri))
+            self._log.info('Initializing Seed Peer(s): [%s]' % seed_uri)
 
             def cb(msg):
                 self._dht._iterativeFind(self._guid, self._dht._knownNodes, 'findNode')
@@ -426,7 +432,7 @@ class CryptoTransportLayer(TransportLayer):
 
     def send(self, data, send_to=None, callback=lambda msg: None):
 
-        self._log.info("Outgoing Data2: %s %s" % (data, send_to))
+        self._log.debug("Outgoing Data: %s %s" % (data, send_to))
 
         # Directed message
         if send_to is not None:

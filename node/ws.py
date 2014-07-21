@@ -5,12 +5,17 @@ import random
 import logging
 
 import tornado.websocket
-import tornado.ioloop
+from zmq.eventloop import ioloop
 
 import protocol
 import pycountry
 import gnupg
 import pprint
+
+import time
+
+ioloop.install()
+
 
 
 class ProtocolHandler:
@@ -27,29 +32,30 @@ class ProtocolHandler:
 
         # handlers from events coming from websocket, we shouldnt need this
         self._handlers = {
-            "connect":          self.client_connect,
-            "peers":          self.client_peers,
-            "query_page":          self.client_query_page,
-            "review":          self.client_review,
-            "order":          self.client_order,
-            "search":          self.client_query_store_products,
-            "shout":          self.client_shout,
-            "query_store_products":	  self.client_query_store_products,
-            "query_orders":	  self.client_query_orders,
-            "query_contracts":	  self.client_query_contracts,
-            "query_messages":	  self.client_query_messages,
-            "send_message":	  self.client_send_message,
-            "update_settings":	self.client_update_settings,
-            "query_order":	self.client_query_order,
-            "pay_order":	self.client_pay_order,
-            "ship_order":	self.client_ship_order,
-            "save_product":	self.client_save_product,
-            "remove_contract":	self.client_remove_contract,
-            "generate_secret":	self.client_generate_secret,
-            "republish_listing":	  self.client_republish_listing,
-            "import_raw_contract":	  self.client_import_raw_contract,
-            "create_contract":	  self.client_create_contract,
+            "connect": self.client_connect,
+            "peers": self.client_peers,
+            "query_page": self.client_query_page,
+            "review": self.client_review,
+            "order": self.client_order,
+            "search": self.client_query_network_for_products,
+            "shout": self.client_shout,
+            "query_store_products": self.client_query_store_products,
+            "query_orders": self.client_query_orders,
+            "query_contracts": self.client_query_contracts,
+            "query_messages": self.client_query_messages,
+            "send_message": self.client_send_message,
+            "update_settings": self.client_update_settings,
+            "query_order": self.client_query_order,
+            "pay_order": self.client_pay_order,
+            "ship_order": self.client_ship_order,
+            "remove_contract": self.client_remove_contract,
+            "generate_secret": self.client_generate_secret,
+            "republish_listing": self.client_republish_listing,
+            "import_raw_contract": self.client_import_raw_contract,
+            "create_contract": self.client_create_contract,
         }
+
+        self._timeouts = []
 
         self._log = logging.getLogger('[%s] %s' % (self._transport._market_id, self.__class__.__name__))
 
@@ -58,7 +64,7 @@ class ProtocolHandler:
 
         countryCodes = []
         for country in pycountry.countries:
-          countryCodes.append({"code":country.alpha2, "name":country.name})
+            countryCodes.append({"code": country.alpha2, "name": country.name})
 
         settings = self._market.get_settings()
 
@@ -68,8 +74,9 @@ class ProtocolHandler:
             'peers': peers,
             'settings': settings,
             'guid': self._transport.guid,
+            'sin': self._transport.sin,
             'countryCodes': countryCodes,
-            'reputation': []#self._transport.reputation.get_my_reputation()
+            'reputation': []  # self._transport.reputation.get_my_reputation()
         }
 
         self.send_to_client(None, message)
@@ -89,15 +96,37 @@ class ProtocolHandler:
         self.send_to_client(None, {"type": "peers", "peers": self.get_peers()})
 
     def client_query_page(self, socket_handler, msg):
-        self._log.info("Message: %s" % msg)
         findGUID = msg['findGUID']
+        success = False
 
-        def cb(success):
-            if not success:
-                self.send_to_client(None, {"type": "peers", "peers": self.get_peers()})
+        query_id = random.randint(0, 1000000)
+        self._timeouts.append(query_id)
 
-        self._market.query_page(findGUID, cb)
-        #self._market.reputation.query_reputation(guid)
+        def cb(msg, query_id):
+            self._log.info('Success %s' % query_id)
+            self._timeouts.remove(query_id)
+            # if not success:
+            #     self.send_to_client(None, {"type": "peers", "peers": self.get_peers()})
+
+        self._market.query_page(findGUID, lambda msg, query_id=query_id: cb(msg, query_id))
+
+        loop = ioloop.IOLoop.instance()
+
+        def unreachable_market(query_id):
+            self._log.info('test')
+            if query_id in self._timeouts:
+                self._log.info('Unreachable Market: %s' % msg)
+                peers = self.get_peers()
+
+                for peer in self._transport._dht._activePeers:
+                    if peer._guid == findGUID:
+                        self._transport._dht._activePeers.remove(peer)
+
+                self.refresh_peers()
+
+
+
+        loop.add_timeout(time.time() + 3, lambda query_id=query_id: unreachable_market(query_id))
 
 
     def client_query_orders(self, socket_handler, msg):
@@ -107,7 +136,7 @@ class ProtocolHandler:
         # Query mongo for orders
         orders = self._market.orders.get_orders()
 
-        self.send_to_client(None, { "type": "myorders", "orders": orders } )
+        self.send_to_client(None, {"type": "myorders", "orders": orders})
 
     def client_query_contracts(self, socket_handler, msg):
 
@@ -116,7 +145,7 @@ class ProtocolHandler:
         # Query mongo for products
         contracts = self._market.get_contracts()
 
-        self.send_to_client(None, { "type": "contracts", "contracts": contracts } )
+        self.send_to_client(None, {"type": "contracts", "contracts": contracts})
 
     def client_query_messages(self, socket_handler, msg):
 
@@ -125,7 +154,7 @@ class ProtocolHandler:
         # Query bitmessage for messages
         messages = self._market.get_messages()
 
-        self.send_to_client(None, { "type": "messages", "messages": messages } )
+        self.send_to_client(None, {"type": "messages", "messages": messages})
 
     def client_send_message(self, socket_handler, msg):
 
@@ -152,22 +181,16 @@ class ProtocolHandler:
         # Query mongo for order
         order = self._market.orders.get_order(msg['orderId'])
 
-        self.send_to_client(None, { "type": "orderinfo", "order": order } )
+        self.send_to_client(None, {"type": "orderinfo", "order": order})
 
 
     def client_update_settings(self, socket_handler, msg):
         self._log.info("Updating settings: %s" % msg)
 
-        self.send_to_client(None, { "type": "settings", "values": msg })
+        self.send_to_client(None, {"type": "settings", "values": msg})
 
         # Update settings in mongo
         self._market.save_settings(msg['settings'])
-
-    def client_save_product(self, socket_handler, msg):
-        #self._log.info("Save product: %s" % msg)
-
-        # Update settings in mongo
-        self._market.save_product(msg)
 
     def client_create_contract(self, socket_handler, contract):
         self._log.info("New Contract: %s" % contract)
@@ -203,8 +226,8 @@ class ProtocolHandler:
 
     def client_generate_secret(self, socket_handler, msg):
 
-      new_secret = self._transport._generate_new_keypair()
-      self.send_opening()
+        new_secret = self._transport._generate_new_keypair()
+        self.send_opening()
 
 
     def client_order(self, socket_handler, msg):
@@ -221,43 +244,75 @@ class ProtocolHandler:
     # TODO: multi-faceted search support
     def client_search(self, socket_handler, msg):
 
-        self._log.info("[Search] %s"% msg)
+        self._log.info("[Search] %s" % msg)
         self._transport._dht.iterativeFindValue(msg['key'], callback=self.on_node_search_value)
-        #self._log.info('Result: %s' % result)
+        # self._log.info('Result: %s' % result)
 
         #response = self._market.lookup(msg)
         #if response:
         #    self._log.info(response)
-            #self.send_to_client(*response)
+        #self.send_to_client(*response)
+
+    def client_query_network_for_products(self, socket_handler, msg):
+
+        self._log.info("Querying for Contracts %s" % msg)
+
+        # Query mongo for products
+        self._transport._dht.find_listings_by_keyword(self._transport, msg['key'], callback=self.on_find_products)
 
 
     def client_query_store_products(self, socket_handler, msg):
+        self._log.info("Searching network for contracts")
+        self._transport._dht.find_listings(self._transport, msg['key'], callback=self.on_find_products_by_store)
 
-        self._log.info("Querying for Store Contracts")
+    def on_find_products_by_store(self, results):
 
-        # Query mongo for products
-        self._transport._dht.find_listings(self._transport, msg['key'], callback=self.on_find_products)
+        results = ast.literal_eval(results) # ADDED THIS -sophron
+        self._log.info('Found Contracts: %s' % type(results))
+        self._log.info(results)
+
+        if len(results):
+
+            data = results['data']
+            contracts = data['contracts']
+            signature = results['signature']
+            self._log.info('Signature: %s' % signature)
+
+            # TODO: Validate signature of listings matches data
+            # self._transport._myself.
+
+            # Go get listing metadata and then send it to the GUI
+            for contract in contracts:
+                self._transport._dht.iterativeFindValue(contract,
+                                                        callback=lambda msg, key=contract: self.on_node_search_value(
+                                                            msg, key))
+
+                #self.send_to_client(None, { "type": "store_products", "products": listings } )
 
     def on_find_products(self, results):
 
-      results = ast.literal_eval(results) # ADDED THIS -sophron
-      self._log.info('Found Contracts: %s' % type(results))
-      self._log.info(results)
+        self._log.info('Found Contracts: %s' % type(results))
+        self._log.info(results)
 
-      if len(results):
-          data = results['data']
-          contracts = data['contracts']
-          signature = results['signature']
-          self._log.info('Signature: %s' % signature)
+        if len(results):
 
-          # TODO: Validate signature of listings matches data
-          #self._transport._myself.
 
-          # Go get listing metadata and then send it to the GUI
-          for contract in contracts:
-              self._transport._dht.iterativeFindValue(contract, callback=lambda msg, key=contract: self.on_node_search_value(msg, key))
 
-      #self.send_to_client(None, { "type": "store_products", "products": listings } )
+            # data = results['data']
+            # contracts = data['contracts']
+            # signature = results['signature']
+            # self._log.info('Signature: %s' % signature)
+
+            # TODO: Validate signature of listings matches data
+            # self._transport._myself.
+
+            # Go get listing metadata and then send it to the GUI
+            for contract in results['listings']:
+                self._transport._dht.iterativeFindValue(contract,
+                                                        callback=lambda msg, key=contract: self.on_global_search_value(
+                                                            msg, key))
+
+                #self.send_to_client(None, { "type": "store_products", "products": listings } )
 
     def client_shout(self, socket_handler, msg):
         msg['uri'] = self._transport._uri
@@ -269,11 +324,11 @@ class ProtocolHandler:
 
         if results:
 
-            self._log.info('Listing Data: %s %s' % (results, key))
+            self._log.debug('Listing Data: %s %s' % (results, key))
 
             # Fix newline issue
             results_data = results.replace('\\n', '\n\r')
-            #self._log.info(results_data)
+            # self._log.info(results_data)
 
             # Import gpg pubkey
             gpg = gnupg.GPG()
@@ -291,11 +346,49 @@ class ProtocolHandler:
                 gpg.import_keys(seller_pubkey)
 
                 split_results = results.split('\n')
-                self._log.debug('DATA: %s' % split_results[3])
 
                 v = gpg.verify(results)
                 if v:
-                    self.send_to_client(None, { "type": "new_listing", "data": contract_data_json, "key": key })
+                    self.send_to_client(None, {"type": "new_listing", "data": contract_data_json, "key": key,
+                                               "rawContract": results})
+                else:
+                    self._log.error('Could not verify signature of contract.')
+            except:
+                self._log.debug('Error getting JSON contract')
+        else:
+            self._log.info('No results')
+
+    def on_global_search_value(self, results, key):
+
+        if results:
+
+            self._log.debug('Listing Data: %s %s' % (results, key))
+
+            # Fix newline issue
+            results_data = results.replace('\\n', '\n\r')
+            # self._log.info(results_data)
+
+            # Import gpg pubkey
+            gpg = gnupg.GPG()
+
+            # Retrieve JSON from the contract
+            # 1) Remove PGP Header
+            contract_data = ''.join(results.split('\n')[3:])
+            index_of_signature = contract_data.find('-----BEGIN PGP SIGNATURE-----', 0, len(contract_data))
+            contract_data_json = contract_data[0:index_of_signature]
+
+            try:
+                contract_data_json = json.loads(contract_data_json)
+                seller_pubkey = contract_data_json.get('Seller').get('seller_PGP')
+
+                gpg.import_keys(seller_pubkey)
+
+                split_results = results.split('\n')
+
+                v = gpg.verify(results)
+                if v:
+                    self.send_to_client(None, {"type": "global_search_result", "data": contract_data_json, "key": key,
+                                               "rawContract": results})
                 else:
                     self._log.error('Could not verify signature of contract.')
             except:
@@ -304,31 +397,28 @@ class ProtocolHandler:
             self._log.info('No results')
 
 
-
     def on_node_search_results(self, results):
         if len(results) > 1:
-          self.send_to_client(None, {"type": "peers", "peers": self.get_peers()})
+            self.send_to_client(None, {"type": "peers", "peers": self.get_peers()})
         else:
-          # Add peer to list of markets
-          self.on_node_peer(results[0])
+            # Add peer to list of markets
+            self.on_node_peer(results[0])
 
-          # Load page for the store
-          self._market.query_page(results[0]._guid)
-
+            # Load page for the store
+            self._market.query_page(results[0]._guid)
 
 
     # messages coming from "the market"
     def on_node_peer(self, peer):
         self._log.info("Add peer: %s" % peer)
 
-
         response = {'type': 'peer',
                     'pubkey': peer._pub
-                              if peer._pub
-                              else 'unknown',
+                    if peer._pub
+                    else 'unknown',
                     'guid': peer._guid
-                              if peer._guid
-                              else '',
+                    if peer._guid
+                    else '',
                     'uri': peer._address}
         self.send_to_client(None, response)
 
@@ -379,12 +469,13 @@ class ProtocolHandler:
             else:
                 peer_item['pubkey'] = 'unknown'
             peer_item['guid'] = peer._guid
+            peer_item['sin'] = peer._sin
             peers.append(peer_item)
 
         return peers
 
-class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
     # Set of WebsocketHandler
     listeners = set()
     # Protects listeners
@@ -415,12 +506,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     @staticmethod
     def _check_request(request):
         return request.has_key("command") and request.has_key("id") and \
-            request.has_key("params") and type(request["params"]) == dict
-            #request.has_key("params") and type(request["params"]) == list
+               request.has_key("params") and type(request["params"]) == dict
+        # request.has_key("params") and type(request["params"]) == list
 
     def on_message(self, message):
 
-        #self._log.info('[On Message]: %s' % message)
+        # self._log.info('[On Message]: %s' % message)
 
         try:
             request = json.loads(message)
@@ -436,20 +527,22 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def _send_response(self, response):
         if self.ws_connection:
-            #self._log.info('Response: %s' % response)
+            # self._log.info('Response: %s' % response)
 
-            
+
             self.write_message(json.dumps(response))
-        #try:
-        #    self.write_message(json.dumps(response))
-        #except tornado.websocket.WebSocketClosedError:
-        #    logging.warning("Dropping response to closed socket: %s",
-        #       response, exc_info=True)
+            #try:
+            #    self.write_message(json.dumps(response))
+            #except tornado.websocket.WebSocketClosedError:
+            #    logging.warning("Dropping response to closed socket: %s",
+            #       response, exc_info=True)
 
     def queue_response(self, response):
         ioloop = tornado.ioloop.IOLoop.instance()
+
         def send_response(*args):
             self._send_response(response)
+
         try:
             # calling write_message or the socket is not thread safe
             ioloop.add_callback(send_response)

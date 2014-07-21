@@ -69,7 +69,10 @@ def start_node(my_market_ip, my_market_port, seed_uri, log_file, market_id, bm_u
     port = 8888
     while error and port < 8988:
         try:
-            application.listen(port)
+            #if not my_market_ip.startswith("192"):
+            #    application.listen(port, "192.168.1.1")
+            #else:
+            application.listen(port, my_market_ip)
             error = False
         except:
             port += 1

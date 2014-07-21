@@ -38,6 +38,7 @@ if not path.isfile(DB_PATH):
                     "unit_price INT, " \
                     "item_title TEXT, " \
                     "item_desc TEXT, " \
+                    "item_condition TEXT, " \
                     "item_quantity_available, " \
                     "state TEXT, " \
                     "key TEXT)")
@@ -71,6 +72,7 @@ if not path.isfile(DB_PATH):
                     "market_id INT, " \
                     "nickname TEXT, " \
                     "secret TEXT, " \
+                    "sin TEXT, " \
                     "pubkey TEXT, " \
                     "guid TEXT, " \
                     "email TEXT, " \

@@ -7,9 +7,8 @@ import logging
 import hashlib
 import random
 from base64 import b64decode, b64encode
-from threading import Thread
 
-from protocol import proto_page, query_page, proto_listing
+from protocol import proto_page, query_page
 from reputation import Reputation
 from orders import Orders
 import protocol
@@ -17,17 +16,15 @@ import lookup
 from pymongo import MongoClient
 from db_store import Obdb 
 from data_uri import DataURI
-from zmq.eventloop import ioloop, zmqstream
+from zmq.eventloop import ioloop
 import tornado
 import constants
 ioloop.install()
 from PIL import Image, ImageOps
 from StringIO import StringIO
-import base64
 import datetime
 from contract import OBContract
 import traceback
-from ws import ProtocolHandler
 import gnupg
 import string
 
@@ -88,11 +85,11 @@ class Market(object):
         self._dht._refreshNode()
 
         # Periodically refresh buckets
-        #loop = tornado.ioloop.IOLoop.instance()
-        # refreshCB = tornado.ioloop.PeriodicCallback(self._dht._refreshNode,
-        #                                             constants.refreshTimeout,
-        #                                             io_loop=loop)
-        # refreshCB.start()
+        loop = tornado.ioloop.IOLoop.instance()
+        refreshCB = tornado.ioloop.PeriodicCallback(self._dht._refreshNode,
+                                                    constants.refreshTimeout,
+                                                    io_loop=loop)
+        refreshCB.start()
 
 
     def load_page(self, welcome):
@@ -112,7 +109,8 @@ class Market(object):
 
 
     def import_contract(self, contract):
-        self._log.debug(contract)
+
+        self._log.debug('Importing Contract: %s' % contract)
 
         # Validate contract code
         ob_contract = OBContract(self._transport)
@@ -138,67 +136,6 @@ class Market(object):
         self._log.debug('New Contract ID: %s' % contract_id)
 
 
-    def save_product(self, msg):
-        #self._log.debug("Saving product: %s" % msg)
-
-        msg['market_id'] = self._market_id
-
-
-        product_id = msg['id'] if msg.has_key("id") else ""
-
-        if product_id == "":
-            product_id = random.randint(0, 1000000)
-
-        if not msg.has_key("productPrice") or not msg['productPrice'] > 0:
-            msg['productPrice'] = 0
-
-        if not msg.has_key("productQuantity") or not msg['productQuantity'] > 0:
-            msg['productQuantity'] = 1
-
-
-        if msg.has_key('productImageData'):
-
-            uri = DataURI(msg['productImageData'])
-            imageData = uri.data
-            mime_type = uri.mimetype
-            charset = uri.charset
-
-            image = Image.open(StringIO(imageData))
-            croppedImage = ImageOps.fit(image, (100, 100), centering=(0.5, 0.5))
-            data = StringIO()
-            croppedImage.save(data, format='PNG')
-
-
-            new_uri = DataURI.make('image/png', charset=charset, base64=True, data=data.getvalue())
-            data.close()
-            msg['productImageData'] = new_uri
-
-
-        ''' Create product contract here and send to the network
-
-        '''
-
-
-        # Save product listing to DHT
-        listing = json.dumps(msg)
-        listing_key = hashlib.sha1(listing).hexdigest()
-
-        hash_value = hashlib.new('ripemd160')
-        hash_value.update(listing_key)
-        listing_key = hash_value.hexdigest()
-
-        msg['key'] = listing_key
-
-        self._db.insertEntry("products", msg)
-        self._log.debug('New Listing Key: %s' % listing_key)
-
-        # Store listing
-        self._transport._dht.iterativeStore(self._transport, listing_key, listing, self._transport._guid)
-
-        self.update_listings_index()
-
-        # If keywords store them in the keyword index
-
     def save_contract(self, msg):
 
         contract_id = random.randint(0, 1000000)
@@ -221,11 +158,12 @@ class Market(object):
         self._log.debug('Settings %s' % self._transport.settings)
         msg['Seller']['seller_PGP'] = gpg.export_keys(self._transport.settings['PGPPubkeyFingerprint'], secret="P@ssw0rd")
 
+        msg['Seller']['seller_GUID'] = self._transport._guid
+
         # Process and crop thumbs for images
         self._log.debug('Msg: %s' % msg)
         if msg['Contract'].has_key('item_images'):
             if msg['Contract']['item_images'].has_key('image1'):
-                print 'multiple images'
 
                 img = msg['Contract']['item_images']['image1']
 
@@ -241,11 +179,6 @@ class Market(object):
 
                 new_uri = DataURI.make('image/png', charset=charset, base64=True, data=data.getvalue())
                 data.close()
-
-                # Break up line for signing with gnupg
-
-
-
 
                 msg['Contract']['item_images'] = new_uri
 
@@ -275,6 +208,15 @@ class Market(object):
         self.update_listings_index()
 
         # If keywords store them in the keyword index
+        keywords = msg['Contract']['item_keywords']
+        self._log.info('Keywords: %s' % keywords)
+        for keyword in keywords:
+
+            hash_value = hashlib.new('ripemd160')
+            hash_value.update('keyword-%s' % keyword)
+            keyword_key = hash_value.hexdigest()
+
+            self._transport._dht.iterativeStore(self._transport, keyword_key, json.dumps({'keyword_index_add':contract_key}), self._transport._guid)
 
     def republish_listing(self, msg):
 
@@ -290,6 +232,16 @@ class Market(object):
         self._transport._dht.iterativeStore(self._transport, listing_key, listing.get('signed_contract_body'), self._transport._guid)
         self.update_listings_index()
 
+        # If keywords store them in the keyword index
+        # keywords = msg['Contract']['item_keywords']
+        # self._log.info('Keywords: %s' % keywords)
+        # for keyword in keywords:
+        #
+        #     hash_value = hashlib.new('ripemd160')
+        #     hash_value.update('keyword-%s' % keyword)
+        #     keyword_key = hash_value.hexdigest()
+        #
+        #     self._transport._dht.iterativeStore(self._transport, keyword_key, json.dumps({'keyword_index_add':contract_key}), self._transport._guid)
 
     def update_listings_index(self):
 
@@ -304,7 +256,7 @@ class Market(object):
         contract_ids = self._db.selectEntries("contracts", {"market_id": self._transport._market_id})
         my_contracts = []
         for contract_id in contract_ids:
-            if contract_id == 1:
+            if contract_id['key'] == 1:
                 continue
             my_contracts.append(contract_id['key'])
 
@@ -321,9 +273,32 @@ class Market(object):
 
     def remove_contract(self, msg):
         self._log.info("Removing contract: %s" % msg)
+
+        # Remove from DHT keyword indices
+        self.remove_from_keyword_indexes(msg['contract_id'])
+
         #self._db.contracts.remove({'id':msg['contract_id']})
         self._db.deleteEntries("contracts", {"id": msg["contract_id"]})
         self.update_listings_index()
+
+    def remove_from_keyword_indexes(self, contract_id):
+
+        #contract = self._db.contracts.find_one({'id':contract_id})
+        contract = self._db.selectEntries("contracts", {"id": contract_id})[0]
+        contract_key = contract['key']
+
+        contract = json.loads(contract['contract_body'])
+        contract_keywords = contract['Contract']['item_keywords']
+
+        for keyword in contract_keywords:
+
+            # Remove keyword from index
+
+            hash_value = hashlib.new('ripemd160')
+            hash_value.update('keyword-%s' % keyword)
+            keyword_key = hash_value.hexdigest()
+
+            self._transport._dht.iterativeStore(self._transport, keyword_key, json.dumps({'keyword_index_remove':contract_key}), self._transport._guid)
 
     def get_messages(self):
         self._log.info("Listing messages for market: %s" % self._transport._market_id)
@@ -383,6 +358,7 @@ class Market(object):
                             "unit_price":item_price,
                             "item_title":contract_body.get('Contract').get('item_title'),
                             "item_desc":contract_body.get('Contract').get('item_desc'),
+                            "item_condition":contract_body.get('Contract').get('item_condition'),
                             "item_quantity_available":contract_body.get('Contract').get('item_quantity'),
                            })
 
@@ -392,8 +368,27 @@ class Market(object):
     # SETTINGS
 
     def save_settings(self, msg):
-        self._log.info("Settings to save %s" % msg)
-        self._log.info(self._transport)
+        self._log.debug("Settings to save %s" % msg)
+
+        # Check for any updates to arbiter or notary status to push to the DHT
+        if msg.has_key('notary'):
+
+            # Generate notary index key
+            hash_value = hashlib.new('ripemd160')
+            hash_value.update('notary-index')
+            key = hash_value.hexdigest()
+
+            if msg['notary'] is True:
+                self._log.info('Letting the network know you are now a notary')
+                data = json.dumps({'notary_index_add': self._transport._guid})
+                self._transport._dht.iterativeStore(self._transport, key, data, self._transport._guid)
+            else:
+                self._log.info('Letting the network know you are not a notary')
+                data = json.dumps({'notary_index_remove': self._transport._guid})
+                self._transport._dht.iterativeStore(self._transport, key, data, self._transport._guid)
+
+        # Update local settings
+        #self._db.settings.update({'id':'%s'%self._transport._market_id}, {'$set':msg}, True)
         self._db.updateEntries("settings", {'market_id': self._transport._market_id}, msg)
 
     def get_settings(self):
@@ -401,15 +396,18 @@ class Market(object):
         settings = self._db.getOrCreate("settings", {"market_id": self._transport._market_id})
         if settings:
             return settings
+        else:
+            return {}
 
     # PAGE QUERYING
 
     def query_page(self, find_guid, callback=lambda msg: None):
 
-        self._log.info('Querying page: %s' % find_guid)
+        self._log.info('Searching network for node: %s' % find_guid)
         msg = query_page(find_guid)
         msg['uri'] = self._transport._uri
         msg['senderGUID'] = self._transport.guid
+        msg['sin'] = self._transport.sin
         msg['pubkey'] = self._transport.pubkey
 
         self._transport.send(msg, find_guid, callback)
@@ -417,15 +415,15 @@ class Market(object):
 
     def on_page(self, page):
 
-
-        self._log.info("Page received and being stored in Market")
-
         #pubkey = page.get('pubkey')
         guid = page.get('senderGUID')
+        sin = page.get('sin')
         page = page.get('text')
 
-        if guid and page:
-            self.pages[guid] = page
+        self._log.info("Received store info from node: %s" % sin)
+
+        if sin and page:
+            self.pages[sin] = page
 
 
     # Return your page info if someone requests it on the network
@@ -443,7 +441,8 @@ class Market(object):
                                         settings['email'] if settings.has_key('email') else '',
                                         settings['bitmessage'] if settings.has_key('bitmessage') else '',
                                         settings['arbiter'] if settings.has_key('arbiter') else '',
-                                        settings['arbiterDescription'] if settings.has_key('arbiterDescription') else ''),
+                                        settings['arbiterDescription'] if settings.has_key('arbiterDescription') else '',
+                                        self._transport.sin),
                                         peer['senderGUID']
                                         )
 
