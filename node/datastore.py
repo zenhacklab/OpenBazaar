@@ -9,6 +9,7 @@
 
 import UserDict
 import logging
+import ast
 
 from pymongo import MongoClient
 from db_store import Obdb 
@@ -185,6 +186,10 @@ class MongoDataStore(DataStore):
         #if row is not None:
         if len(row) != 0:
             value = row[0][columnName]
+            try:
+                value = ast.literal_eval(value) # ADDED THIS -sophron
+            except:
+                pass
             return value
 
 
