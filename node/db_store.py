@@ -78,8 +78,8 @@ class Obdb():
                     set_part = set_part + ", %s = '%s'" % (key, value)
             first = True
             for key, value in where_dict.iteritems():
-                key = key.replace("'","''");
-                value = value.replace("'","''");
+                key = str(key).replace("'","''");
+                value = str(value).replace("'","''");
                 if first: 
                     where_part = "%s = '%s'" % (key, value)
                     first = False
