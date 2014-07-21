@@ -8,7 +8,6 @@ import gnupg
 import obelisk
 from protocol import hello_request, hello_response, proto_response_pubkey
 from db_store import Obdb 
-from pymongo import MongoClient
 import pyelliptic as ec
 from p2p import PeerConnection, TransportLayer
 from dht import DHT

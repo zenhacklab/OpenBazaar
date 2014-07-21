@@ -13,7 +13,6 @@ from reputation import Reputation
 from orders import Orders
 import protocol
 import lookup
-from pymongo import MongoClient
 from db_store import Obdb 
 from data_uri import DataURI
 from zmq.eventloop import ioloop

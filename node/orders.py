@@ -4,7 +4,6 @@ import time
 
 from protocol import order
 from pyelliptic import ECC
-from pymongo import MongoClient
 from multisig import Multisig
 from db_store import Obdb
 import gnupg

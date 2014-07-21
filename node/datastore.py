@@ -11,7 +11,6 @@ import UserDict
 import logging
 import ast
 
-from pymongo import MongoClient
 from db_store import Obdb 
 
 
