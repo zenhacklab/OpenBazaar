@@ -106,6 +106,7 @@ fi
 
 if [ ! -f $DBDIR/$DBFILE ]; then
     $PYTHON util/setup_db.py
+    sleep 2
 fi
 
 if [ $DEVELOPMENT == 0 ]; then
