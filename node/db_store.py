@@ -39,7 +39,10 @@ class Obdb():
         """
         d = {}
         for idx, col in enumerate(cursor.description):
-            d[col[0]] = row[idx]
+            if row[idx] == None:
+                d[col[0]] = ""
+            else:
+                d[col[0]] = row[idx]
         return d
 
     def getOrCreate(self, table, get_where_dict, operator="AND"):
@@ -110,8 +113,11 @@ class Obdb():
             query = "INSERT INTO %s(%s) VALUES(%s)"  \
                     % (table, updatefield_part, setfield_part)
             cur.execute(query)
+            lastrowid = cur.lastrowid 
             self._log.info("query: %s "% query)
         self._disconnectFromDb()
+        if lastrowid:
+            return lastrowid
 
     def selectEntries(self, table, where_dict={"\"1\"":"1"}, operator="AND", order_field="id", order="ASC"):
         """ A wrapper for the SQL SELECT operation. It will always return all the 

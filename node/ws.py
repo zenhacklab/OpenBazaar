@@ -267,7 +267,6 @@ class ProtocolHandler:
 
     def on_find_products_by_store(self, results):
 
-        results = ast.literal_eval(results) # ADDED THIS -sophron
         self._log.info('Found Contracts: %s' % type(results))
         self._log.info(results)
 
