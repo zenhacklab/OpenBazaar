@@ -45,7 +45,7 @@ if not path.isfile(DB_PATH):
 
         cur.execute("CREATE TABLE products(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
-                    "market_id INT, "
+                    "market_id INT, " \
                     "productTitle TEXT, "
                     "productDescription TEXT, " \
                     "productPrice INT, " \
@@ -58,6 +58,7 @@ if not path.isfile(DB_PATH):
         cur.execute("CREATE TABLE orders(" \
                     "id INTEGER PRIMARY KEY " \
                     "AUTOINCREMENT, " \
+                    "market_id INT, " \
                     "state TEXT, " \
                     "type TEXT, " \
                     "address TEXT, " \
@@ -65,7 +66,9 @@ if not path.isfile(DB_PATH):
                     "seller TEXT, " \
                     "escrows TEXT, " \
                     "text TEXT, " \
-                    "created TEXT)")
+                    "contract_key TEXT, " \
+                    "signed_contract_body TEXT, " \
+                    "created INT)")
 
         cur.execute("CREATE TABLE settings(" \
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " \
