@@ -1183,8 +1183,8 @@ $scope.BuyItemInstanceCtrl = function ($scope, $modalInstance, myself, merchantP
 
 
     $scope.order = {message:'', tx: '', listingKey:key, listingTotal:'', productTotal:'', productQuantity:1, rawContract:rawContract}
-    $scope.order.notary = $scope.notaries[0];
-    $scope.order.arbiter = $scope.arbiters[0];
+    //$scope.order.notary = $scope.notaries[0];
+    //$scope.order.arbiter = $scope.arbiters[0];
 
     $scope.submitOrder = function() {
 
