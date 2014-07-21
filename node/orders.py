@@ -93,7 +93,7 @@ class Orders(object):
         new_order['type'] = 'order'
         self._transport.send(new_order, new_order['seller'].decode('hex'))
 
-    def send_order(self, new_order):  # action
+    def send_order(self, order_id, contract):  # action
         self._log.info('Verify Contract and Store in Orders Table')
         self._log.debug('Contract: %s' % contract)
 
@@ -115,7 +115,7 @@ class Orders(object):
             if v:
                 self._log.info('Verified Contract')
                 #self._db.orders.update({"id": order_id}, {"$set": {"state": "sent", "updated": time.time()}}, True)
-                self._db.updateEntries("orders", {"id": order_id}, {"state": "sent", "updated": time.time()})
+                self._db.updateEntries("orders", {"id": order_id}, {"state": "sent", "updated": str(time.time())})
             else:
                 self._log.error('Could not verify signature of contract.')
         except:
@@ -177,7 +177,7 @@ class Orders(object):
         #    '$set': {'market_id': self._transport._market_id, 'contract_key': contract_key,
         #             'signed_contract_body': str(signed_data), 'state': 'new'}}, True)
 
-        self._db.insertEntry("orders", {
+        order_id = self._db.insertEntry("orders", {
                             'market_id': self._transport._market_id, 'contract_key': contract_key,
                             'signed_contract_body': str(signed_data), 'state': 'new'})
 
