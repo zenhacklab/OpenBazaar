@@ -9,8 +9,8 @@ from threading import Thread
 import routingtable
 import datastore
 import constants
-import obelisk
 from protocol import proto_store
+import obelisk
 
 class DHT(object):
     def __init__(self, transport, market_id, settings):
@@ -315,8 +315,9 @@ class DHT(object):
         self._republishData()
 
     def _refreshRoutingTable(self):
-        # Get Random ID from every k-bucket
         self._log.info('Started Refreshing Routing Table')
+
+        # Get Random ID from every k-bucket
         nodeIDs = self._routingTable.getRefreshList(0, False)
 
         def searchForNextNodeID():
@@ -344,9 +345,10 @@ class DHT(object):
         self._log.debug('Republishing Data')
         expiredKeys = []
 
+        self._log.debug('Key: %s' % self._dataStore.keys())
+
         for key in self._dataStore.keys():
 
-            self._log.debug('Key: %s' % self._dataStore.keys())
             # Filter internal variables stored in the datastore
             if key == 'nodeState':
                 continue
@@ -435,7 +437,6 @@ class DHT(object):
         # Find appropriate storage nodes and save key value
         # self.iterativeFindNode(key, lambda msg, key=key, value=value, originalPublisherID=originalPublisherID, age=age: self.storeKeyValue(msg, key, value, originalPublisherID, age))
 
-
     def find_listings_by_keyword(self, transport, keyword, listingFilter=None, callback=None):
 
         hashvalue = hashlib.new('ripemd160')
@@ -449,7 +450,6 @@ class DHT(object):
         # Find appropriate storage nodes and save key value
         # self.iterativeFindNode(key, lambda msg, key=key, value=value, originalPublisherID=originalPublisherID, age=age: self.storeKeyValue(msg, key, value, originalPublisherID, age))
 
-   
 
     def iterativeStore(self, transport, key, value, originalPublisherID=None, age=0):
         """ The Kademlia store operation
@@ -545,6 +545,7 @@ class DHT(object):
 
         except:
             self._log.debug('Could not load JSON from value to store')
+
 
         now = int(time.time())
         originallyPublished = now - age
@@ -769,7 +770,6 @@ class DHT(object):
                                "pubkey": contact._transport.pubkey}
                         self._log.debug('Sending findNode to: %s %s' % (contact._address, msg))
                         contact.send(msg)
-
                         new_search._contactedNow += 1
 
                     else:
