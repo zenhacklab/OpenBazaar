@@ -68,6 +68,7 @@ if not path.isfile(DB_PATH):
                     "text TEXT, " \
                     "contract_key TEXT, " \
                     "signed_contract_body TEXT, " \
+                    "updated INT, " \
                     "created INT)")
 
         cur.execute("CREATE TABLE settings(" \
