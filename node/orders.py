@@ -45,7 +45,7 @@ class Orders(object):
         return order
 
     def get_orders(self):
-        orders = self._db.selectEntries("orders", order_field="created", order="DESC")
+        orders = self._db.selectEntries("orders", {'market_id': self._market_id}, order_field="created", order="DESC")
         for o in orders:
             o["escrows"] = self._db.selectEntries("escrows", {"id": o["id"]})
         return orders
