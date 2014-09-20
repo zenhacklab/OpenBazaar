@@ -5,7 +5,7 @@ backports.ssl-match-hostname==3.4.0.2
 certifi==14.05.14
 ecdsa==0.11
 miniupnpc==1.9
-pybitcointools==1.1
+pybitcointools==1.1.15
 pycountry==1.8
 pyelliptic==1.5.4
 pysqlcipher==2.6.3-1
