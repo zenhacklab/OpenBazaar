@@ -697,7 +697,7 @@ class Orders(object):
         self.log.info('Order ID: %s' % order_id)
 
         # Push buy order to DHT and node if available
-        # self.transport.dht.iterativeStore(self.transport, contract_key, str(signed_data), self.transport.guid)
+        # self.transport.store(contract_key, str(signed_data), self.transport.guid)
         # self.update_listings_index()
 
         # Find Seller Data in Contract
