@@ -148,25 +148,13 @@ class TransportLayer(object):
                     self.log.info("Error sending over peer!")
                     traceback.print_exc()
 
-    def store(self, key, value_to_store=None, originalPublisherID=None, age=0):
-        """ Store or republish data.
-
-        @param key: The key of the data.
-        @type key: str
-        @param originalPublisherID: The node ID of the node that is the
-                                    B{original} publisher of the data
-        @type originalPublisherID: str
-        @param age: The relative age of the data (time in seconds since it was
-                    originally published). Note that the original publish time
-                    isn't actually given, to compensate for clock skew between
-                    different nodes.
-        @type age: int
+    def store(self, *args, **kwargs):
         """
-        self.dht.iterativeStore(
-            key, 
-            value_to_store=value_to_store,
-            originalPublisherID=originalPublisherID,
-            age=age)
+        Store or republish data.
+
+        Refer to the dht module (iterativeStore()) for further details.
+        """
+        self.dht.iterativeStore(*args, **kwargs)
 
     def broadcast_goodbye(self):
         self.log.info("Broadcast goodbye")
