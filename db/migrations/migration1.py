@@ -3,8 +3,7 @@
 from pysqlcipher import dbapi2 as sqlite
 import sys
 
-sys.path.append('node/')
-import constants
+from node import constants
 
 DB_PATH = constants.DB_PATH
 
