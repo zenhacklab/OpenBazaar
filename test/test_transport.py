@@ -1,4 +1,3 @@
-import json
 import unittest
 
 import mock
@@ -62,17 +61,9 @@ class TestTransportLayerMessageHandling(unittest.TestCase):
         self.tl._on_message(data)
         self.tl.trigger_callbacks.assert_called_with(data['type'], data)
 
-    def test_on_raw_message_invalid(self):
-        """Invalid serialized messages should be dropped."""
-        self.tl._init_peer = mock.MagicMock()
-        self.tl._on_message = mock.MagicMock()
-        self.tl._on_raw_message('invalid serialization')
-        self.assertFalse(self.tl._init_peer.called)
-        self.assertFalse(self.tl._on_message.called)
-
     def test_on_raw_message_hello_no_uri(self):
         """A hello message with no uri should not add a peer."""
-        self.tl._on_raw_message([json.dumps(protocol.hello_request({}))])
+        self.tl._on_raw_message(protocol.hello_request({}))
         self.assertEqual(0, len(self.tl.peers))
 
     def test_on_raw_message_hello_with_uri(self):
@@ -80,7 +71,7 @@ class TestTransportLayerMessageHandling(unittest.TestCase):
         request = protocol.hello_request({
             'uri': 'tcp://localhost:12345'
         })
-        self.tl._on_raw_message([json.dumps(request)])
+        self.tl._on_raw_message(request)
         self.assertEqual(1, len(self.tl.peers))
 
 
