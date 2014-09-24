@@ -1,5 +1,4 @@
 from behave import given, then, when
-from tornado.testing import *
 from zmq.eventloop import ioloop
 
 from node.db_store import Obdb
