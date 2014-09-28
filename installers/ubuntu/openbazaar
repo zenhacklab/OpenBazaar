@@ -23,20 +23,20 @@ def usage():
   """
 
 
-def main(argv):
-    if len(argv) < 2:
+def main(command=None):
+    if command is None and len(sys.argv) != 2:
         usage()
-        return
+        sys.exit(1)
+    command = sys.argv[1]
     COMMANDS = {'start': '/usr/share/openbazaar/run.sh',
                 'stop': '/usr/share/openbazaar/stop.sh',
                 'restart': '/usr/share/openbazaar/stop.sh; '
                            '/usr/share/openbazaar/run.sh',
                 'port': '/usr/share/openbazaar/port.sh'}
-    command = argv[1]
     if command not in COMMANDS:
         print 'Wrong command: %s' % command
         usage()
-        return
+        sys.exit(1)
     os.chdir('/usr/share/openbazaar')
     os.system(COMMANDS[command])
 
