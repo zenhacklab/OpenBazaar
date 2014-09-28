@@ -1,6 +1,5 @@
 """
-Author: Nikolaos <renelvon> Korasidis
-contact: renelvon@gmail.com
+A module to deal with identity management.
 """
 
 class GUIDMixin(object):

@@ -46,13 +46,13 @@ class KBucket(object):
 
         @param contact: The contact to add or a string containing the
                         contact's node ID
-        @type contact: connection.CryptoPeerConnection or str
+        @type contact: guid.GUIDMixin or str or unicode
 
         @raise node.kbucket.BucketFull: The bucket is full and the contact
                                         to add is not already in it.
         """
         if isinstance(contact, basestring):
-            contact = guid.AbstractGUID(contact)
+            contact = guid.GUIDMixin(contact)
         try:
             # Assume contact exists. Attempt to remove the old one...
             self.contacts.remove(contact)
@@ -78,9 +78,9 @@ class KBucket(object):
         Return the contact with the specified ID or None if not present.
 
         @param contactID: The ID to search.
-        @type contact: connection.CryptoPeerConnection or str
+        @type contact: guid.GUIDMixin or str or unicode
 
-        @rtype: connection.CryptoPeerConnection or None
+        @rtype: guid.GUIDMixin or None
         """
         self.log.debug('[getContact] %s' % contactID)
         for contact in self.contacts:
@@ -102,13 +102,13 @@ class KBucket(object):
                                discarded before returning. If a C{str} is
                                passed as this argument, it must be the
                                contact's ID.
-        @type excludeContact: connection.CryptoPeerConnection or str
+        @type excludeContact: guid.GUIDMixin or str or unicode
 
         @return: The first `count` contacts in the contact list.
                  This amount is capped by the available contacts
                  and the bucket size, of course. If no contacts
                  are present, an empty list is returned.
-        @rtype:  list of connection.CryptoPeerConnection
+        @rtype:  list of guid.GUIDMixin
         """
 
         currentLen = len(self)
@@ -144,7 +144,7 @@ class KBucket(object):
 
         @param contact: The contact to remove, or a string containing the
                         contact's node ID
-        @type contact: connection.CryptoPeerConnection or str
+        @type contact: guid.GUIDMixin or str or unicode
 
         @raise ValueError: The specified contact is not in this bucket
         """
