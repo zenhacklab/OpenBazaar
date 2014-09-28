@@ -16,7 +16,9 @@ class GUIDMixin(object):
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.guid == other.guid
-        elif isinstance(other, str):
+        elif isinstance(other, basestring):
+            # FIXME: This functionality is deprecated. You should
+            # compare GUIDMixin against other GUIDMixin only.
             return self.guid == other
         return False
 
