@@ -1,19 +1,23 @@
-from pprint import pformat
-from urlparse import urlparse
-from zmq.eventloop import ioloop, zmqstream
-from zmq.error import ZMQError
-import logging
-import pyelliptic as ec
-import socket
-import zlib
-import obelisk
-import zmq
 import errno
 import json
-import network_util
+import logging
 import platform
-from crypto_util import (makePubCryptor, hexToPubkey, makePrivCryptor,
-    pubkey_to_pyelliptic)
+from pprint import pformat
+import socket
+from urlparse import urlparse
+import zlib
+
+import obelisk
+import pyelliptic as ec
+import zmq
+from zmq.error import ZMQError
+from zmq.eventloop import ioloop, zmqstream
+
+from crypto_util import (
+    makePubCryptor, hexToPubkey, makePrivCryptor, pubkey_to_pyelliptic
+)
+from guid import GUIDMixin
+import network_util
 
 ioloop.install()
 
@@ -89,10 +93,13 @@ class PeerConnection(object):
             raise
 
 
-class CryptoPeerConnection(PeerConnection):
+class CryptoPeerConnection(GUIDMixin, PeerConnection):
 
     def __init__(self, transport, address, pub=None, guid=None, nickname="",
             sin=None):
+
+        GUIDMixin.__init__(self, guid)
+        PeerConnection.__init__(self, transport, address, nickname)
 
         # self._priv = transport._myself
         self.pub = pub
@@ -104,17 +111,7 @@ class CryptoPeerConnection(PeerConnection):
 
         self.sin = sin
         self._peer_alive = False  # unused; might remove later if unnecessary
-        self.guid = guid
         self.address = "tcp://%s:%s" % (self.ip, self.port)
-
-        PeerConnection.__init__(self, transport, address, nickname)
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.guid == other.guid
-        elif isinstance(other, str):
-            return self.guid == other
-        return False
 
     def start_handshake(self, handshake_cb=None):
 

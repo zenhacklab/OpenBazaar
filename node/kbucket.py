@@ -2,6 +2,7 @@ import logging
 
 from six import string_types
 import constants
+import guid
 
 
 class BucketFull(Exception):
@@ -50,6 +51,8 @@ class KBucket(object):
         @raise node.kbucket.BucketFull: The bucket is full and the contact
                                         to add is not already in it.
         """
+        if isinstance(contact, basestring):
+            contact = guid.AbstractGUID(contact)
         try:
             # Assume contact exists. Attempt to remove the old one...
             self.contacts.remove(contact)
