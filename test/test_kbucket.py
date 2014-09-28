@@ -8,7 +8,7 @@ class TestKbucket(unittest.TestCase):
 
     @staticmethod
     def _mk_contact_by_num(i):
-        return guid.AbstractGUID(str(i))
+        return guid.GUIDMixin(str(i))
 
     @classmethod
     def setUpClass(cls):

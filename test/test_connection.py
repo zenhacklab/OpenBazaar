@@ -2,7 +2,7 @@ import unittest
 
 import mock
 
-from node import connection
+from node import connection, guid
 
 
 class TestPeerConnection(unittest.TestCase):
@@ -78,6 +78,18 @@ class TestCryptoPeerConnection(TestPeerConnection):
     def setUp(self):
         self.pc1 = self._mk_default_CPC()
         self.pc2 = self._mk_complete_CPC()
+
+    def test_subclassing(self):
+        self.assertTrue(
+            issubclass(
+                connection.CryptoPeerConnection,
+                connection.PeerConnection
+            )
+        )
+
+        self.assertTrue(
+            issubclass(connection.CryptoPeerConnection, guid.GUIDMixin)
+        )
 
     def test_init(self):
         super(TestCryptoPeerConnection, self).test_init()
