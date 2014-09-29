@@ -5,7 +5,7 @@ from zmq.eventloop import ioloop
 from node.db_store import Obdb
 from node.setup_db import setup_db
 from node.transport import CryptoTransportLayer
-from test_util import ip_address, nickname, get_db_path
+from features.test_util import ip_address, nickname, get_db_path
 
 port = 12345
 

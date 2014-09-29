@@ -1,6 +1,10 @@
-import os
-from zmq.eventloop import ioloop
+# pylint: disable=import-error
 from distutils.util import strtobool as _bool
+# pylint: enable=import-error
+import os
+
+from zmq.eventloop import ioloop
+
 from test_util import remove_peers_from_db
 
 BEHAVE_DEBUG_ON_ERROR = _bool(os.environ.get("BEHAVE_DEBUG_ON_ERROR", "no"))

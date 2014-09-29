@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 import os
-import sys
 import unittest
 
-# Add root directory of the project to our path in order to import db_store
-dir_of_executable = os.path.dirname(__file__)
-path_to_project_root = os.path.abspath(os.path.join(dir_of_executable, '..'))
-sys.path.insert(0, path_to_project_root)
 from node.db_store import Obdb
 from node.setup_db import setup_db
 
