@@ -5,7 +5,7 @@ from protocol import hello_response
 from protocol import goodbye
 from protocol import proto_response_pubkey
 from urlparse import urlparse
-from zmq.eventloop import ioloop, zmqstream
+from zmq.eventloop import ioloop
 from zmq.eventloop.ioloop import PeriodicCallback
 from collections import defaultdict
 from pprint import pformat
@@ -13,22 +13,16 @@ from pybitcointools.main import privkey_to_pubkey
 from pybitcointools.main import privtopub
 from pybitcointools.main import random_key
 from crypto_util import pubkey_to_pyelliptic
-from crypto_util import makePrivCryptor
-from crypto_util import makePubCryptor
 from pysqlcipher.dbapi2 import OperationalError, DatabaseError
 import gnupg
 import xmlrpclib
 import logging
 import pyelliptic as ec
-import requests
 import json
-import socket
 import traceback
 from threading import Thread
-import zlib
 import obelisk
 import network_util
-import zmq
 import random
 import hashlib
 
@@ -49,17 +43,16 @@ class TransportLayer(object):
         self.market_id = market_id
         self.nickname = nickname
         self.handler = None
-
-        try:
-            socket.inet_pton(socket.AF_INET6, my_ip)
-            my_uri = 'tcp://[%s]:%s' % (self.ip, self.port)
-        except (socket.error, ValueError):
-            my_uri = 'tcp://%s:%s' % (self.ip, self.port)
-        self.uri = my_uri
+        self.uri = network_util.get_peer_url(self.ip, self.port)
+        self.listener = None
 
         self.log = logging.getLogger(
             '[%s] %s' % (market_id, self.__class__.__name__)
         )
+
+    def start_listener(self):
+        self.listener = connection.PeerListener(self.ip, self.port, self._on_raw_message)
+        self.listener.listen()
 
     def add_callbacks(self, callbacks):
         for section, callback in callbacks:
@@ -87,56 +80,6 @@ class TransportLayer(object):
 
     def get_profile(self):
         return hello_request({'uri': self.uri})
-
-    def listen(self, pubkey):
-        self.log.info("Listening at: %s:%s" % (self.ip, self.port))
-        self.ctx = zmq.Context()
-        self.socket = self.ctx.socket(zmq.REP)
-
-        if network_util.is_loopback_addr(self.ip):
-            try:
-                # we are in local test mode so bind that socket on the
-                # specified IP
-                self.socket.bind(self.uri)
-            except Exception as e:
-                error_message = "\n\nTransportLayer.listen() error!!!: "
-                error_message += "Could not bind socket to " + self.uri
-                error_message += " (" + str(e) + ")"
-                import platform
-                if platform.system() == 'Darwin':
-                    error_message += "\n\nPerhaps you have not added a "\
-                                     "loopback alias yet.\n"
-                    error_message += "Try this on your terminal and restart "\
-                                     "OpenBazaar in development mode again:\n"
-                    error_message += "\n\t$ sudo ifconfig lo0 alias 127.0.0.2"
-                    error_message += "\n\n"
-                raise Exception(error_message)
-
-        else:
-            try:
-                socket.inet_pton(socket.AF_INET6, self.ip)
-                self.socket.ipv6 = True
-                self.socket.bind('tcp://[*]:%s' % self.port)
-            except (AttributeError, socket.error, ValueError):
-                self.socket.bind('tcp://*:%s' % self.port)
-
-        self.stream = zmqstream.ZMQStream(
-            self.socket, io_loop=ioloop.IOLoop.current()
-        )
-
-        def handle_recv(message):
-            for msg in message:
-                self._on_raw_message(msg)
-            self.stream.send(
-                json.dumps({
-                    'type': 'ok',
-                    'senderGUID': self.guid,
-                    'pubkey': pubkey,
-                    'senderNick': self.nickname
-                })
-            )
-
-        self.stream.on_recv(handle_recv)
 
     def closed(self, *args):
         self.log.info("client left")
@@ -218,14 +161,7 @@ class TransportLayer(object):
         if msg['type'] != 'ok':
             self.trigger_callbacks(msg['type'], msg)
 
-    def _on_raw_message(self, serialized):
-        self.log.info("connected " + str(len(serialized)))
-        try:
-            msg = json.loads(serialized[0])
-        except:
-            self.log.info("incorrect msg! " + serialized)
-            return
-
+    def _on_raw_message(self, msg):
         msg_type = msg.get('type')
         if msg_type == 'hello_request' and msg.get('uri'):
             self._init_peer(msg)
@@ -257,9 +193,8 @@ class TransportLayer(object):
         return True
 
     def shutdown(self):
-        if self.ctx is not None:
-            print "TransportLayer.shutdown() destroying zmq ctx sockets."
-            self.ctx.destroy(linger=None)
+        if self.listener is not None:
+            self.listener.stop()
 
 
 class CryptoTransportLayer(TransportLayer):
@@ -281,15 +216,9 @@ class CryptoTransportLayer(TransportLayer):
             if not self._connect_to_bitmessage(bm_user, bm_pass, bm_port):
                 self.log.info('Bitmessage not installed or started')
 
-        try:
-            socket.inet_pton(socket.AF_INET6, my_ip)
-            my_uri = "tcp://[%s]:%s" % (my_ip, my_port)
-        except (socket.error, ValueError):
-            my_uri = "tcp://%s:%s" % (my_ip, my_port)
-
         self.market_id = market_id
         self.nick_mapping = {}
-        self.uri = my_uri
+        self.uri = network_util.get_peer_url(my_ip, my_port)
         self.ip = my_ip
         self.nickname = ""
         self._dev_mode = dev_mode
@@ -306,17 +235,27 @@ class CryptoTransportLayer(TransportLayer):
         TransportLayer.__init__(self, market_id, my_ip, my_port,
                                 self.guid, self.nickname)
 
-        self.setup_callbacks()
-        self.listen(self.pubkey)
+        self.start_listener()
 
         if seed_mode == 0 and not dev_mode and not disable_ip_update:
             self.start_ip_address_checker()
 
-    def setup_callbacks(self):
+    def start_listener(self):
         self.add_callbacks([('hello', self._ping),
                             ('findNode', self._find_node),
                             ('findNodeResponse', self._find_node_response),
                             ('store', self._store_value)])
+
+        self.listener = connection.CryptoPeerListener(
+            self.ip, self.port, self.pubkey, self.secret, self._on_message)
+
+        self.listener.set_ok_msg({
+                    'type': 'ok',
+                    'senderGUID': self.guid,
+                    'pubkey': self.pubkey,
+                    'senderNick': self.nickname
+                })
+        self.listener.listen()
 
     def start_ip_address_checker(self):
         '''Checks for possible public IP change'''
@@ -324,28 +263,14 @@ class CryptoTransportLayer(TransportLayer):
         self.caller.start()
 
     def _ip_updater_periodic_callback(self):
-        try:
-            r = requests.get('http://ipv4.icanhazip.com')
+        new_ip = network_util.get_my_ip()
+        if not new_ip or new_ip == self.ip:
+            return
 
-            if r and hasattr(r, 'text'):
-                ip = r.text
-                ip = ip.strip(' \t\n\r')
-                if ip != self.ip:
-                    self.ip = ip
-                    try:
-                        socket.inet_pton(socket.AF_INET6, self.ip)
-                        my_uri = 'tcp://[%s]:%s' % (self.ip, self.port)
-                    except (socket.error, ValueError):
-                        my_uri = 'tcp://%s:%s' % (self.ip, self.port)
-                    self.uri = my_uri
-                    self.stream.close()
-                    self.listen(self.pubkey)
+        if self.listener is not None:
+            self.listener.set_ip_address(new_ip)
 
-                    self.dht._iterativeFind(self.guid, [], 'findNode')
-            else:
-                self.log.error('Could not get IP')
-        except Exception as e:
-            self.log.error('[Requests] error: %s' % e)
+        self.dht._iterativeFind(self.guid, [], 'findNode')
 
     def save_peer_to_db(self, peer_tuple):
         uri = peer_tuple[0]
@@ -559,11 +484,7 @@ class CryptoTransportLayer(TransportLayer):
 
         # Connect up through seed servers
         for idx, seed in enumerate(seed_peers):
-            try:
-                socket.inet_pton(socket.AF_INET6, seed)
-                seed_peers[idx] = "tcp://[%s]:12345" % seed
-            except (socket.error, ValueError):
-                seed_peers[idx] = "tcp://%s:12345" % seed
+            seed_peers[idx] = network_util.get_peer_url(seed, "12345")
 
         # Connect to persisted peers
         db_peers = self.get_past_peers()
@@ -826,68 +747,6 @@ class CryptoTransportLayer(TransportLayer):
         self.dht.add_peer(self, uri, pubkey, guid, nickname)
         t = Thread(target=self.trigger_callbacks, args=(msg['type'], msg,))
         t.start()
-
-    def _on_raw_message(self, serialized):
-        try:
-
-            # Decompress message
-            serialized = zlib.decompress(serialized)
-
-            msg = json.loads(serialized)
-            self.log.info("Message Received [%s]" % msg.get('type', 'unknown'))
-
-            if msg.get('type') is None:
-
-                data = msg.get('data').decode('hex')
-                sig = msg.get('sig').decode('hex')
-
-                try:
-                    cryptor = makePrivCryptor(self.secret)
-
-                    try:
-                        data = cryptor.decrypt(data)
-                    except Exception as e:
-                        self.log.info('Exception: %s' % e)
-
-                    self.log.debug('Signature: %s' % sig.encode('hex'))
-                    self.log.debug('Signed Data: %s' % data)
-
-                    # Check signature
-                    data_json = json.loads(data)
-                    sigCryptor = makePubCryptor(data_json['pubkey'])
-                    if sigCryptor.verify(sig, data):
-                        self.log.info('Verified')
-                    else:
-                        self.log.error('Message signature could not be verified %s' % msg)
-                        # return
-
-                    msg = json.loads(data)
-                    self.log.debug('Message Data %s ' % msg)
-                except Exception as e:
-                    self.log.error('Could not decrypt message properly %s' % e)
-
-        except ValueError:
-            try:
-                # Encrypted?
-                try:
-                    msg = self._myself.decrypt(serialized)
-                    msg = json.loads(msg)
-
-                    self.log.info(
-                        "Decrypted Message [%s]" % msg.get('type', 'unknown')
-                    )
-                except:
-                    self.log.error("Could not decrypt message: %s" % msg)
-                    return
-            except:
-                self.log.error('Message probably sent using incorrect pubkey')
-
-                return
-
-        if msg.get('type') is not None:
-            self._on_message(msg)
-        else:
-            self.log.error('Received a message with no type')
 
     def shutdown(self):
         print "CryptoTransportLayer.shutdown()!"

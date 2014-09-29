@@ -1,8 +1,7 @@
 from pprint import pformat
 from urlparse import urlparse
 from zmq.eventloop import ioloop, zmqstream
-from crypto_util import makePrivCryptor
-from crypto_util import hexToPubkey
+from zmq.error import ZMQError
 import logging
 import pyelliptic as ec
 import socket
@@ -11,6 +10,10 @@ import obelisk
 import zmq
 import errno
 import json
+import network_util
+import platform
+from crypto_util import (makePubCryptor, hexToPubkey, makePrivCryptor,
+    pubkey_to_pyelliptic)
 
 ioloop.install()
 
@@ -257,3 +260,173 @@ class CryptoPeerConnection(PeerConnection):
 
     def get_guid(self):
         return self.guid
+
+class PeerListener(object):
+    def __init__(self, ip, port, data_cb):
+        self.ip = ip
+        self.port = port
+        self._data_cb = data_cb
+
+        self.uri = network_util.get_peer_url(self.ip, self.port)
+        self.is_listening = False
+        self.ctx = None
+        self.socket = None
+        self.stream = None
+        self._ok_msg = None
+
+        self.log = logging.getLogger(self.__class__.__name__)
+
+    def set_ip_address(self, new_ip):
+        self.ip = new_ip
+        self.uri = network_util.get_peer_url(self.ip, self.port)
+        if not self.is_listening:
+            return
+
+        try:
+            self.stream.close()
+            self.listen()
+        except Exception as e:
+            self.log.error('[Requests] error: %s' % e)
+
+    def set_ok_msg(self, ok_msg):
+        self._ok_msg = ok_msg
+
+    def listen(self):
+        self.log.info("Listening at: %s:%s" % (self.ip, self.port))
+        self.ctx = zmq.Context()
+        self.socket = self.ctx.socket(zmq.REP)
+
+        if network_util.is_loopback_addr(self.ip):
+            try:
+                # we are in local test mode so bind that socket on the
+                # specified IP
+                self.socket.bind(self.uri)
+            except ZMQError as e:
+                error_message = "".join(
+                    "PeerListener.listen() error:",
+                    "Could not bind socket to %s" % self.uri,
+                    "Details:\n",
+                    "(%s)" % e)
+
+                if platform.system() == 'Darwin':
+                    error_message.join(
+                        "\n\nPerhaps you have not added a ",
+                        "loopback alias yet.\n",
+                        "Try this on your terminal and restart ",
+                        "OpenBazaar in development mode again:\n",
+                        "\n\t$ sudo ifconfig lo0 alias 127.0.0.2",
+                        "\n\n")
+                raise Exception(error_message)
+
+        else:
+            if self.ip.find('[') != -1:
+                self.socket.ipv6 = True
+                self.socket.bind('tcp://[*]:%s' % self.port)
+            else:
+                self.socket.bind('tcp://*:%s' % self.port)
+
+        self.stream = zmqstream.ZMQStream(
+            self.socket, io_loop=ioloop.IOLoop.current()
+        )
+
+        def handle_recv(messages):
+            #FIXME: investigate if we really get more than one messages here
+            for msg in messages:
+                self._on_raw_message(msg)
+
+            if self._ok_msg:
+                self.stream.send(json.dumps(self._ok_msg))
+
+        self.is_listening = True
+
+        self.stream.on_recv(handle_recv)
+
+    def _on_raw_message(self, serialized):
+        self.log.info("connected %d", len(serialized))
+        try:
+            msg = json.loads(serialized[0])
+        except ValueError:
+            self.log.info("incorrect msg! %s", serialized)
+            return
+
+        self._data_cb(msg)
+
+    def stop(self):
+        if self.ctx:
+            print "PeerListener.stop() destroying zmq socket."
+            self.ctx.destroy(linger=None)
+            self.is_listening = False
+
+class CryptoPeerListener(PeerListener):
+
+    def __init__(self, ip, port, pubkey, secret, data_cb):
+
+        PeerListener.__init__(self, ip, port, data_cb)
+
+        self.pubkey = pubkey
+        self.secret = secret
+
+        #fixme: refactor this mess
+        #this was copied as is from CryptoTransportLayer
+        #soon all crypto code will be refactored and this will be removed
+        self._myself = ec.ECC(
+            pubkey=pubkey_to_pyelliptic(self.pubkey).decode('hex'),
+            raw_privkey=self.secret.decode('hex'),
+            curve='secp256k1'
+        )
+
+    def _on_raw_message(self, serialized):
+        try:
+            # Decompress message
+            serialized = zlib.decompress(serialized)
+
+            msg = json.loads(serialized)
+            self.log.info("Message Received [%s]" % msg.get('type', 'unknown'))
+
+            if msg.get('type') is None:
+
+                data = msg.get('data').decode('hex')
+                sig = msg.get('sig').decode('hex')
+
+                try:
+                    cryptor = makePrivCryptor(self.secret)
+
+                    try:
+                        data = cryptor.decrypt(data)
+                    except Exception as e:
+                        self.log.info('Exception: %s' % e)
+
+                    self.log.debug('Signature: %s' % sig.encode('hex'))
+                    self.log.debug('Signed Data: %s' % data)
+
+                    # Check signature
+                    data_json = json.loads(data)
+                    sigCryptor = makePubCryptor(data_json['pubkey'])
+                    if sigCryptor.verify(sig, data):
+                        self.log.info('Verified')
+                    else:
+                        self.log.error('Message signature could not be verified %s' % msg)
+                        # return
+
+                    msg = json.loads(data)
+                    self.log.debug('Message Data %s ' % msg)
+                except Exception as e:
+                    self.log.error('Could not decrypt message properly %s' % e)
+
+        except ValueError:
+            try:
+                msg = self._myself.decrypt(serialized)
+                msg = json.loads(msg)
+
+                self.log.info(
+                    "Decrypted Message [%s]" % msg.get('type', 'unknown')
+                )
+            except:
+                self.log.error("Could not decrypt message: %s" % msg)
+
+                return
+
+        if msg.get('type') is not None:
+            self._data_cb(msg)
+        else:
+            self.log.error('Received a message with no type')
