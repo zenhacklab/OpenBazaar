@@ -5,9 +5,16 @@ import protocol
 import pycountry
 import gnupg
 import obelisk
-import pybitcointools
-from pybitcointools import *
-
+import json
+import random
+from pybitcointools import (
+    apply_multisignatures,
+    eligius_pushtx,
+    mk_multisig_script,
+    mktx,
+    multisign,
+    scriptaddr
+)
 import tornado.websocket
 from zmq.eventloop import ioloop
 from twisted.internet import reactor
@@ -705,12 +712,12 @@ class ProtocolHandler(object):
                     print 'seller sig', ms
                     seller_signatures.append(ms)
 
-                tx2 = pybitcointools.apply_multisignatures(
+                tx2 = apply_multisignatures(
                     tx, 0, script, seller_signatures[0], msg['signatures'][0]
                 )
 
                 print 'FINAL SCRIPT: %s' % tx2
-                print 'Sent', pybitcointools.eligius_pushtx(tx2)
+                print 'Sent', eligius_pushtx(tx2)
 
                 self.send_to_client(
                     None,
