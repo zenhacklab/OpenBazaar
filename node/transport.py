@@ -646,7 +646,7 @@ class CryptoTransportLayer(TransportLayer):
         if send_to is not None:
 
             peer = self.dht.routingTable.getContact(send_to)
-            if not peer:
+            if peer is None:
                 for activePeer in self.dht.activePeers:
                     if activePeer.guid == send_to:
                         peer = activePeer
@@ -668,6 +668,10 @@ class CryptoTransportLayer(TransportLayer):
             for peer in self.dht.activePeers:
                 try:
                     peer = self.dht.routingTable.getContact(peer.guid)
+
+                    if peer is None:
+                        self.dht.routingTable.addContact(peer)
+
                     data['senderGUID'] = self.guid
                     data['pubkey'] = self.pubkey
 
