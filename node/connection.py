@@ -13,6 +13,7 @@ import zmq
 from zmq.error import ZMQError
 from zmq.eventloop import ioloop, zmqstream
 
+import constants
 from crypto_util import (
     makePubCryptor, hexToPubkey, makePrivCryptor, pubkey_to_pyelliptic
 )
@@ -31,7 +32,7 @@ class PeerConnection(object):
         self.nickname = nickname
         self.responses_received = {}
 
-        self.ctx = zmq.Context()
+        self.ctx = transport.ctx
 
         self.log = logging.getLogger(
             '[%s] %s' % (self.transport.market_id, self.__class__.__name__)
@@ -215,12 +216,13 @@ class CryptoPeerConnection(GUIDMixin, PeerConnection):
 
             if self.check_port():
 
-                # Include guid
+                # Include sender information and version
                 data['guid'] = self.guid
                 data['senderGUID'] = self.transport.guid
                 data['uri'] = self.transport.uri
                 data['pubkey'] = self.transport.pubkey
                 data['senderNick'] = self.transport.nickname
+                data['v'] = constants.VERSION
 
                 self.log.debug(
                     'Sending to peer: %s %s' % (self.ip, pformat(data))
@@ -259,14 +261,14 @@ class CryptoPeerConnection(GUIDMixin, PeerConnection):
         return self.guid
 
 class PeerListener(object):
-    def __init__(self, ip, port, data_cb):
+    def __init__(self, ip, port, ctx, data_cb):
         self.ip = ip
         self.port = port
         self._data_cb = data_cb
 
         self.uri = network_util.get_peer_url(self.ip, self.port)
         self.is_listening = False
-        self.ctx = None
+        self.ctx = ctx
         self.socket = None
         self.stream = None
         self._ok_msg = None
@@ -290,7 +292,6 @@ class PeerListener(object):
 
     def listen(self):
         self.log.info("Listening at: %s:%s" % (self.ip, self.port))
-        self.ctx = zmq.Context()
         self.socket = self.ctx.socket(zmq.REP)
 
         if network_util.is_loopback_addr(self.ip):
@@ -356,9 +357,9 @@ class PeerListener(object):
 
 class CryptoPeerListener(PeerListener):
 
-    def __init__(self, ip, port, pubkey, secret, data_cb):
+    def __init__(self, ip, port, pubkey, secret, ctx, data_cb):
 
-        PeerListener.__init__(self, ip, port, data_cb)
+        PeerListener.__init__(self, ip, port, ctx, data_cb)
 
         self.pubkey = pubkey
         self.secret = secret

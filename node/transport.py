@@ -5,6 +5,7 @@ from protocol import hello_response
 from protocol import goodbye
 from protocol import proto_response_pubkey
 from urlparse import urlparse
+import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.ioloop import PeriodicCallback
 from collections import defaultdict
@@ -46,12 +47,15 @@ class TransportLayer(object):
         self.uri = network_util.get_peer_url(self.ip, self.port)
         self.listener = None
 
+        # Create one ZeroMQ context to be reused and reduce overhead
+        self.ctx = zmq.Context()
+
         self.log = logging.getLogger(
             '[%s] %s' % (market_id, self.__class__.__name__)
         )
 
     def start_listener(self):
-        self.listener = connection.PeerListener(self.ip, self.port, self._on_raw_message)
+        self.listener = connection.PeerListener(self.ip, self.port, self.ctx, self._on_raw_message)
         self.listener.listen()
 
     def add_callbacks(self, callbacks):
@@ -247,7 +251,9 @@ class CryptoTransportLayer(TransportLayer):
                             ('store', self._store_value)])
 
         self.listener = connection.CryptoPeerListener(
-            self.ip, self.port, self.pubkey, self.secret, self._on_message)
+            self.ip, self.port, self.pubkey, self.secret, self.ctx,
+            self._on_message
+        )
 
         self.listener.set_ok_msg({
                     'type': 'ok',
