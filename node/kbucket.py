@@ -1,6 +1,5 @@
 import logging
 
-from six import string_types
 import constants
 
 
@@ -161,6 +160,6 @@ class KBucket(object):
                  C{False} otherwise.
         @rtype: bool
         """
-        if isinstance(key, string_types):
+        if isinstance(key, basestring):
             key = long(key, 16)
         return self.rangeMin <= key < self.rangeMax
