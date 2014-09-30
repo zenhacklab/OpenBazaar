@@ -11,6 +11,7 @@ import obelisk
 import zmq
 import errno
 import json
+import constants
 
 ioloop.install()
 
@@ -24,7 +25,7 @@ class PeerConnection(object):
         self.nickname = nickname
         self.responses_received = {}
 
-        self.ctx = zmq.Context()
+        self.ctx = transport.ctx
 
         self.log = logging.getLogger(
             '[%s] %s' % (self.transport.market_id, self.__class__.__name__)
@@ -215,12 +216,13 @@ class CryptoPeerConnection(PeerConnection):
 
             if self.check_port():
 
-                # Include guid
+                # Include sender information and version
                 data['guid'] = self.guid
                 data['senderGUID'] = self.transport.guid
                 data['uri'] = self.transport.uri
                 data['pubkey'] = self.transport.pubkey
                 data['senderNick'] = self.transport.nickname
+                data['v'] = constants.VERSION
 
                 self.log.debug(
                     'Sending to peer: %s %s' % (self.ip, pformat(data))
