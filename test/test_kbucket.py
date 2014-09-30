@@ -79,7 +79,7 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testAddContact_new(self):
+    def test_AddContact_new(self):
         new_id = self.range_min + self.init_contact_count
         new_contact = self._mk_contact_by_num(new_id)
         prev_count = len(self.bucket.getContacts())
@@ -109,7 +109,7 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testAddContact_existing(self):
+    def test_AddContact_existing(self):
         new_id = self.range_min
         new_contact = self._mk_contact_by_num(new_id)
         prev_count = len(self.bucket.getContacts())
@@ -139,7 +139,7 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testAddContact_full(self):
+    def test_AddContact_full(self):
         self.assertEqual(
             len(self.bucket.getContacts()),
             constants.k - 1,
@@ -171,7 +171,7 @@ class TestKbucket(unittest.TestCase):
             "Contact list was modified before raising exception."
         )
 
-    def testGetContact(self):
+    def test_GetContact(self):
         for i in range(self.init_contact_count):
             c_id = self.range_min + i
             self.assertEqual(
@@ -186,7 +186,7 @@ class TestKbucket(unittest.TestCase):
             "Nonexistent contact found."
         )
 
-    def _test_GetContact_scenario(self, count_expected, count=-1, bucket=None):
+    def _test_GetContacts_scenario(self, count_expected, count=-1, bucket=None):
         if bucket is None:
             bucket = self.bucket
 
@@ -202,23 +202,23 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testGetContacts_empty(self):
+    def test_GetContacts_empty(self):
         empty_bucket = self._make_kbucket(count=0)
-        self._test_GetContact_scenario(0, bucket=empty_bucket)
+        self._test_GetContacts_scenario(0, bucket=empty_bucket)
 
-    def testGetContacts_default(self):
+    def test_GetContacts_default(self):
         count = self.init_contact_count
-        self._test_GetContact_scenario(count, count)
+        self._test_GetContacts_scenario(count, count)
 
-    def testGetContacts_count(self):
+    def test_GetContacts_count(self):
         count = self.init_contact_count // 2
-        self._test_GetContact_scenario(count, count)
+        self._test_GetContacts_scenario(count, count)
 
-    def testGetContacts_available(self):
+    def test_GetContacts_available(self):
         count = self.init_contact_count + 1
-        self._test_GetContact_scenario(self.init_contact_count, count)
+        self._test_GetContacts_scenario(self.init_contact_count, count)
 
-    def testGetContacts_exclude(self):
+    def test_GetContacts_exclude(self):
         all_contacts = self.bucket.getContacts()
         count_all = len(all_contacts)
 
@@ -260,7 +260,7 @@ class TestKbucket(unittest.TestCase):
         except Exception:
             self.fail("Crashed while excluding contact absent from bucket.")
 
-    def testRemoveContact_existing_contact(self):
+    def test_RemoveContact_existing_contact(self):
         rm_contact = self._mk_contact_by_num(self.range_min)
         prev_count = len(self.bucket.getContacts())
 
@@ -281,7 +281,7 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testRemoveContact_existing_guid(self):
+    def test_RemoveContact_existing_guid(self):
         rm_guid = str(self.range_min)
         prev_count = len(self.bucket.getContacts())
 
@@ -302,7 +302,7 @@ class TestKbucket(unittest.TestCase):
             )
         )
 
-    def testRemoveContact_absent(self):
+    def test_RemoveContact_absent(self):
         prev_list = self.bucket.getContacts()
 
         with self.assertRaises(ValueError):
@@ -315,13 +315,17 @@ class TestKbucket(unittest.TestCase):
             "Contact list was modified before raising exception."
         )
 
-    def testkeyInRange(self):
+    def test_keyInRange(self):
         self.assertTrue(self.bucket.keyInRange(self.range_min))
         self.assertTrue(self.bucket.keyInRange(self.range_max - 1))
 
         mid_key = self.range_min + (self.range_max - self.range_min) // 2
+        mid_key_hex = hex(mid_key)
+        mid_key_uhex = unicode(mid_key_hex)
+
         self.assertTrue(self.bucket.keyInRange(mid_key))
-        self.assertTrue(self.bucket.keyInRange(hex(mid_key)))
+        self.assertTrue(self.bucket.keyInRange(mid_key_hex))
+        self.assertTrue(self.bucket.keyInRange(mid_key_uhex))
 
         self.assertFalse(self.bucket.keyInRange(self.range_min - 1))
         self.assertFalse(self.bucket.keyInRange(self.range_max))
