@@ -1,3 +1,4 @@
+#pylint: disable=function-redefined
 from behave import given, then, when
 from zmq.eventloop import ioloop
 

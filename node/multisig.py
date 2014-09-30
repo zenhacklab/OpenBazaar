@@ -232,7 +232,7 @@ def main():
     client = obelisk.ObeliskOfLightClient("tcp://85.25.198.97:8081")
     escrow = Escrow(client, pubkeys[0], pubkeys[1], pubkeys[2])
 
-    def finished(tx):
+    def finished_escrow(tx):
 
         buyer_sigs = escrow.release_funds(
             tx,
@@ -248,7 +248,7 @@ def main():
 
     # TODO: Send to the bitcoin network
 
-    escrow.initiate("1Fufjpf9RM2aQsGedhSpbSCGRHrmLMJ7yY", finished)
+    escrow.initiate("1Fufjpf9RM2aQsGedhSpbSCGRHrmLMJ7yY", finished_escrow)
 
     ##########################################################
     # MULTISIGNATURE TEST
@@ -256,7 +256,7 @@ def main():
     msig = Multisig(client, 2, pubkeys)
     print "Multisig address: ", msig.address
 
-    def finished(tx):
+    def finished_msig(tx):
         print tx
         print ''
         print tx.serialize().encode("hex")
@@ -285,7 +285,7 @@ def main():
 
     msig.create_unsigned_transaction(
         "1Fufjpf9RM2aQsGedhSpbSCGRHrmLMJ7yY",
-        finished
+        finished_msig
     )
     reactor.run()
 
