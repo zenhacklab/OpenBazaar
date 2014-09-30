@@ -29,7 +29,7 @@ class RoutingTable(object):
         exists, its status will be updated
 
         @param contact: The contact to add to this node's k-buckets
-        @type contact: connection.PeerConnection
+        @type contact: guid.GUIDMixin or str or unicode
         """
 
     @staticmethod
@@ -147,7 +147,7 @@ class TreeRoutingTable(RoutingTable):
         exists, its status will be updated
 
         @param contact: The contact to add to this node's k-buckets
-        @type contact: connection.PeerConnection
+        @type contact: guid.GUIDMixin or str or unicode
         """
 
         # If contact is itself return
