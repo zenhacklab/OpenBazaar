@@ -122,13 +122,11 @@ class MongoDataStore(DataStore):
         keys = []
         try:
             db_keys = self.db.selectEntries("datastore")
-
             for row in db_keys:
                 keys.append(row['key'].decode('hex'))
-
-        finally:
-            # self.log.info('Keys: %s' % keys)
-            return keys
+        except:
+            pass
+        return keys
 
     def lastPublished(self, key):
         """ Get the time the C{(key, value)} pair identified by C{key}
@@ -241,13 +239,11 @@ class SqliteDataStore(DataStore):
         keys = []
         try:
             db_keys = self.db.selectEntries("datastore")
-
             for row in db_keys:
                 keys.append(row['key'].decode('hex'))
-
-        finally:
-            # self.log.info('Keys: %s' % keys)
-            return keys
+        except:
+            pass
+        return keys
 
     def lastPublished(self, key):
         """ Get the time the C{(key, value)} pair identified by C{key}
