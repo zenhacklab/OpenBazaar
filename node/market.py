@@ -67,14 +67,25 @@ class Market(object):
         self.settings = self.transport.settings
         self.gpg = gnupg.GPG()
 
+        self.all_messages = (
+            'query_myorders',
+            'peer',
+            'query_page',
+            'query_listings',
+            'negotiate_pubkey',
+            'response_pubkey'
+        )
+
         # Register callbacks for incoming events
         self.transport.add_callbacks([
-            ('query_myorders', self.on_query_myorders),
-            ('peer', self.on_peer),
-            ('query_page', self.on_query_page),
-            ('query_listings', self.on_query_listings),
-            ('negotiate_pubkey', self.on_negotiate_pubkey),
-            ('proto_response_pubkey', self.on_response_pubkey)
+            (
+                msg,
+                {
+                    'cb': getattr(self, 'on_%s' % msg),
+                    'validator_cb': getattr(self, 'validate_on_%s' % msg)
+                }
+            )
+            for msg in self.all_messages
         ])
 
         self.nickname = self.settings.get('nickname', '')
@@ -699,6 +710,11 @@ class Market(object):
 
         self.transport.send(msg, find_guid, callback)
 
+    def validate_on_query_page(self, *data):
+        self.log.debug('Validating on query page message.')
+        keys = ("senderGUID", "uri", "pubkey", "senderNick")
+        return all(k in data for k in keys)
+
     def on_query_page(self, peer):
         """Return your page info if someone requests it on the network"""
         self.log.info("Someone is querying for your page")
@@ -734,9 +750,17 @@ class Market(object):
         t = Thread(target=send_page_query)
         t.start()
 
+    def validate_on_query_myorders(self, *data):
+        self.log.debug('Validating on query myorders message.')
+        return True
+
     def on_query_myorders(self, peer):
         """Run if someone is querying for your page"""
-        self.log.info("Someone is querying for your page: %s", peer)
+        self.log.debug("Someone is querying for your page: %s", peer)
+
+    def validate_on_query_listings(self, *data):
+        self.log.debug('Validating on query listings message.')
+        return "senderGUID" in data
 
     def on_query_listings(self, peer, page=0):
         """Run if someone is querying your listings"""
@@ -754,25 +778,34 @@ class Market(object):
                 contract['type'] = "listing_result"
                 self.transport.send(contract, peer['senderGUID'])
 
+    def validate_on_peer(self, *data):
+        self.log.debug('Validating on peer message.')
+        return True
+
     def on_peer(self, peer):
         pass
+
+    def validate_on_negotiate_pubkey(self, *data):
+        self.log.debug('Validating on negotiate pubkey message.')
+        keys = ("nickname", "ident_pubkey")
+        return all(k in data for k in keys)
 
     def on_negotiate_pubkey(self, ident_pubkey):
         """Run if someone is asking for your real pubKey"""
         self.log.info("Someone is asking for your real pubKey")
-        assert "nickname" in ident_pubkey
-        assert "ident_pubkey" in ident_pubkey
         nickname = ident_pubkey['nickname']
         ident_pubkey = ident_pubkey['ident_pubkey'].decode("hex")
         self.transport.respond_pubkey_if_mine(nickname, ident_pubkey)
+
+    def validate_on_response_pubkey(self, *data):
+        self.log.debug('Validating on response pubkey message.')
+        keys = ("pubkey", "nickname", "signature")
+        return all(k in data for k in keys)
 
     def on_response_pubkey(self, response):
         """Deprecated. This is a DarkMarket holdover.
            Run to verify signature if someone send you the pubKey.
         """
-        assert "pubkey" in response
-        assert "nickname" in response
-        assert "signature" in response
         pubkey = response["pubkey"].decode("hex")
         # signature = response["signature"].decode("hex")
         nickname = response["nickname"]
