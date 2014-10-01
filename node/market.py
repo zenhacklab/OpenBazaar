@@ -238,23 +238,18 @@ class Market(object):
         self.save_contract_to_db(contract_id, msg, signed_data, contract_key)
 
         # Store listing
-        t = Thread(target=self.transport.dht.iterativeStore, args=(
+        self.transport.dht.iterativeStore(
             self.transport,
             contract_key,
             str(signed_data),
-            self.transport.guid))
-        t.start()
+            self.transport.guid)
 
-        t2 = Thread(target=self.update_listings_index)
-        t2.start()
+        self.update_listings_index()
 
 
         # If keywords are present
         keywords = msg['Contract']['item_keywords']
-
-        t3 = Thread(target=self.update_keywords_on_network, args=(contract_key, keywords,))
-        t3.start()
-
+        self.update_keywords_on_network(contract_key, keywords)
 
     def shipping_address(self):
         """Get shipping address"""
