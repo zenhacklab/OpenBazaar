@@ -1,3 +1,19 @@
+openbazaar (0.2.0) unstable; urgency=low
+  * Multiple bug fixes.
+  * New feature: “Add Node” by entering Store GUID.
+  * New feature: Shutdown from within the web client. (Settings > Advanced)
+  * New feature: Web port is now randomized by default.
+  * New feature: Automatically opens preferred web browser by default on start.
+  * UX-Upgrade: stores on home page are now scrollable.
+  * Tests converted to formal unit tests, travis integration.
+  * Code reorganization, normalization, cleanup, refactors.
+  * Debian binary now lintian error and warning free.
+  * Compatibility and stability improvements in `configure.sh`.
+  * Search improvements.
+  * Support for Python 2.6 dropped.
+
+ -- OpenBazaar Team <project@openbazaar.org>  Tue, 30 Sept 2014 15:30:00 -0500
+
 openbazaar (0.1.0) unstable; urgency=low
   * Generation, signing, and verification of Ricardian Contracts.
   * Generation, signing, and broadcasting of 2-of-3 multisig.
