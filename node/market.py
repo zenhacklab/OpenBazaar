@@ -1,28 +1,28 @@
 """
 This module manages all market related activities
 """
-from StringIO import StringIO
 import ast
 from base64 import b64decode, b64encode
+import gnupg
+import hashlib
+import json
 import logging
+from PIL import Image, ImageOps
+import random
+from StringIO import StringIO
+from threading import Thread
 import traceback
 
-from PIL import Image, ImageOps
-import gnupg
+from pybitcointools.main import privkey_to_pubkey
 import tornado
 from zmq.eventloop import ioloop
 
 import constants
-from pybitcointools.main import privkey_to_pubkey
+from crypto_util import makePrivCryptor
 from data_uri import DataURI
 from orders import Orders
 from protocol import proto_page, query_page
-from threading import Thread
-from crypto_util import makePrivCryptor
 
-import random
-import json
-import hashlib
 
 ioloop.install()
 
@@ -31,7 +31,6 @@ class Market(object):
     """This class manages the active market for the application"""
 
     def __init__(self, transport, db):
-
         """Class constructor defines the basic attributes and callbacks
 
         Attributes:
@@ -49,7 +48,6 @@ class Market(object):
           log: Log handler
           settings: Local settings
           gpg: Public PGP key class
-
         """
 
         # Current
@@ -79,7 +77,7 @@ class Market(object):
             ('proto_response_pubkey', self.on_response_pubkey)
         ])
 
-        self.load_page()
+        self.nickname = self.settings.get('nickname', '')
 
         # Periodically refresh buckets
         loop = tornado.ioloop.IOLoop.instance()
@@ -87,14 +85,6 @@ class Market(object):
                                                     constants.refreshTimeout,
                                                     io_loop=loop)
         refreshCB.start()
-
-    def load_page(self):
-        """Set up nickname in db by args.market_id from start_node(...)"""
-        self.nickname = self.settings['nickname'] \
-            if 'nickname' in self.settings else ""
-        # store_description = self.settings['storeDescription'] \
-        #    if 'storeDescription' self.settings else ""
-        # self.nickname = nickname
 
     def disable_welcome_screen(self):
         """This just flags the welcome screen to not show on startup"""
@@ -199,18 +189,20 @@ class Market(object):
             )
 
     def save_contract(self, msg):
-        """Sign, stored in the database contract, and update the keyword in the network"""
+        """Sign, store contract in the database and update the keyword in the
+        network
+        """
         contract_id = self.get_contract_id()
 
         # Refresh market settings
         self.settings = self.get_settings()
 
-        msg['Seller']['seller_PGP'] = self.gpg.export_keys(
-            self.settings['PGPPubkeyFingerprint'])
-        msg['Seller']['seller_BTC_uncompressed_pubkey'] = \
-            self.settings['btc_pubkey']
-        msg['Seller']['seller_GUID'] = self.settings['guid']
-        msg['Seller']['seller_Bitmessage'] = self.settings['bitmessage']
+        seller = msg['Seller']
+        seller['seller_PGP'] = self.gpg.export_keys(
+                self.settings['PGPPubkeyFingerprint'])
+        seller['seller_BTC_uncompressed_pubkey'] = self.settings['btc_pubkey']
+        seller['seller_GUID'] = self.settings['guid']
+        seller['seller_Bitmessage'] = self.settings['bitmessage']
 
         # Process and crop thumbs for images
         if 'item_images' in msg['Contract']:
@@ -246,7 +238,6 @@ class Market(object):
 
         self.update_listings_index()
 
-
         # If keywords are present
         keywords = msg['Contract']['item_keywords']
         self.update_keywords_on_network(contract_key, keywords)
@@ -255,15 +246,16 @@ class Market(object):
         """Get shipping address"""
         settings = self.get_settings()
         shipping_address = {
-            "recipient_name": settings.get('recipient_name'),
-            "street1": settings.get('street1'),
-            "street2": settings.get('street2'),
-            "city": settings.get('city'),
-            "stateRegion": settings.get('stateRegion'),
-            "stateProvinceRegion": settings.get('stateProvinceRegion'),
-            "zip": settings.get('zip'),
-            "country": settings.get('country'),
-            "countryCode": settings.get('countryCode')}
+            'recipient_name': settings.get('recipient_name'),
+            'street1': settings.get('street1'),
+            'street2': settings.get('street2'),
+            'city': settings.get('city'),
+            'stateRegion': settings.get('stateRegion'),
+            'stateProvinceRegion': settings.get('stateProvinceRegion'),
+            'zip': settings.get('zip'),
+            'country': settings.get('country'),
+            'countryCode': settings.get('countryCode'),
+        }
         return shipping_address
 
     def add_trusted_notary(self, guid, nickname=""):
@@ -576,31 +568,49 @@ class Market(object):
         for contract in contracts:
             try:
                 contract_body = json.loads(u"%s" % contract['contract_body'])
-                if contract_body.get('Contract').get('item_price') > 0:
-                    item_price = contract_body.get('Contract').get('item_price')
-                else:
-                    item_price = 0
+            except (KeyError, ValueError) as e:
+                self.log.error('Problem loading the contract body JSON: %s',
+                               e.message)
+                continue
+            try:
+                contract_field = contract_body['Contract']
+            except KeyError:
+                self.log.error('Contract field not found in contract_body')
+                continue
+            except TypeError:
+                self.log.error('Malformed contract_body: %s',
+                               str(contract_body))
+                continue
+            item_price = contract_field.get('item_price')
+            if item_price is None or item_price < 0:
+                item_price = 0
+            try:
+                item_delivery = contract_field['item_delivery']
+            except KeyError:
+                self.log.error('item_delivery not found in Contract field')
+                continue
+            except TypeError:
+                self.log.error('Malformed Contract field: %s',
+                               str(contract_field))
+                continue
+            shipping_price = item_delivery.get('shipping_price')
+            if shipping_price is None or shipping_price < 0:
+                shipping_price = 0
 
-                if contract_body.get('Contract').get('item_delivery').get('shipping_price') > 0:
-                    shipping_price = contract_body.get('Contract').get('item_delivery').get('shipping_price')
-                else:
-                    shipping_price = 0
-
-                my_contracts.append({
-                    "key": contract['key'] if 'key' in contract else "",
-                    "id": contract['id'] if 'id' in contract else "",
-                    "item_images": contract_body.get('Contract').get('item_images'),
-                    "signed_contract_body": contract['signed_contract_body'] if 'signed_contract_body' in contract else "",
-                    "contract_body": contract_body,
-                    "unit_price": item_price,
-                    "deleted": contract.get('deleted'),
-                    "shipping_price": shipping_price,
-                    "item_title": contract_body.get('Contract').get('item_title'),
-                    "item_desc": contract_body.get('Contract').get('item_desc'),
-                    "item_condition": contract_body.get('Contract').get('item_condition'),
-                    "item_quantity_available": contract_body.get('Contract').get('item_quantity')})
-            except Exception as e:
-                self.log.error("Problem loading the contract body JSON: %e", e)
+            my_contracts.append({
+                'key': contract.get('key', ''),
+                'id': contract.get('id', ''),
+                'item_images': contract_field.get('item_images'),
+                'signed_contract_body': contract.get('signed_contract_body', ''),
+                'contract_body': contract_body,
+                'unit_price': item_price,
+                'deleted': contract.get('deleted'),
+                'shipping_price': shipping_price,
+                'item_title': contract_field.get('item_title'),
+                'item_desc': contract_field.get('item_desc'),
+                'item_condition': contract_field.get('item_condition'),
+                'item_quantity_available': contract_field.get('item_quantity'),
+            })
 
         return {
             "contracts": my_contracts, "page": page,
@@ -670,16 +680,16 @@ class Market(object):
         if settings['notary'] == 1:
             settings['notary'] = True
 
-        settings['notaries'] = ast.literal_eval(settings['notaries']) \
-            if settings['notaries'] != "" else []
-        settings['trustedArbiters'] = \
-            ast.literal_eval(settings['trustedArbiters']) \
-            if settings['trustedArbiters'] != "" else []
-        settings['privkey'] = settings['privkey'] \
-            if 'secret' in settings else ""
+        for key in ('notaries', 'trustedArbiters'):
+            # Fix key not found, None and empty string
+            value = settings.get(key) or '[]'
+            settings[key] = ast.literal_eval(value)
+
+        if 'secret' not in settings:
+            settings['privkey'] = ''
+
         settings['btc_pubkey'] = privkey_to_pubkey(settings.get('privkey'))
-        settings['secret'] = settings['secret'] \
-            if 'secret' in settings else ""
+        settings['secret'] = settings.get('secret')
 
         self.log.info("SETTINGS: %s", settings)
 
@@ -689,8 +699,7 @@ class Market(object):
             return {}
 
     def query_page(self, find_guid, callback=lambda msg: None):
-        """Page querying"""
-
+        """Query network for node"""
         self.log.info("Searching network for node: %s", find_guid)
         msg = query_page(find_guid)
         msg['uri'] = self.transport.uri
@@ -724,23 +733,23 @@ class Market(object):
                 settings['storeDescription'],
                 self.signature,
                 settings['nickname'],
-                settings['PGPPubKey'] if 'PGPPubKey' in settings else '',
-                settings['email'] if 'email' in settings else '',
-                settings['bitmessage'] if 'bitmessage' in settings else '',
-                settings['arbiter'] if 'arbiter' in settings else '',
-                settings['notary'] if 'notary' in settings else '',
-                settings['arbiterDescription'] if 'arbiterDescription' in settings else '',
+                settings.get('PGPPubKey', ''),
+                settings.get('email', ''),
+                settings.get('bitmessage', ''),
+                settings.get('arbiter', ''),
+                settings.get('notary', ''),
+                settings.get('arbiterDescription', ''),
                 self.transport.sin))
 
         t = Thread(target=send_page_query)
         t.start()
 
     def on_query_myorders(self, peer):
-        """Ran if someone is querying for your page"""
+        """Run if someone is querying for your page"""
         self.log.info("Someone is querying for your page: %s", peer)
 
     def on_query_listings(self, peer, page=0):
-        """Ran if someone is querying your listings"""
+        """Run if someone is querying your listings"""
         self.log.info("Someone is querying your listings: %s", peer)
         contracts = self.get_contracts(page)
 
@@ -759,7 +768,7 @@ class Market(object):
         pass
 
     def on_negotiate_pubkey(self, ident_pubkey):
-        """Ran if someone is asking for your real pubKey"""
+        """Run if someone is asking for your real pubKey"""
         self.log.info("Someone is asking for your real pubKey")
         assert "nickname" in ident_pubkey
         assert "ident_pubkey" in ident_pubkey
@@ -769,8 +778,7 @@ class Market(object):
 
     def on_response_pubkey(self, response):
         """Deprecated. This is a DarkMarket holdover.
-           Ran for verify signature if someone send to you pubKey.
-
+           Run to verify signature if someone send you the pubKey.
         """
         assert "pubkey" in response
         assert "nickname" in response
@@ -793,7 +801,7 @@ class Market(object):
         self.log.info("##################################")
 
     def release_funds_to_merchant(self, buyer_order_id, tx, script, signatures, guid):
-        """TX sent to merchant"""
+        """Send TX to merchant"""
         self.log.debug("Release funds to merchant: %s %s %s %s", buyer_order_id, tx, signatures, guid)
         self.transport.send(
             {
