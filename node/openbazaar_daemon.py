@@ -167,7 +167,7 @@ def start_node(my_market_ip,
             log_file,
             encoding='utf-8',
             maxBytes=50000000,
-            backupCount=0
+            backupCount=1
         )
         locallogger.addHandler(handler)
     except Exception as e:
