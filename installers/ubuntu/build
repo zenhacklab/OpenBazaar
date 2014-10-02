@@ -139,7 +139,7 @@ def copy_files():
     os.system('chmod 0755 .' + BIN_DIR + '/openbazaar')
 
     # copy DEBIAN files
-    os.system('cp -R ../debian .')
+    os.system('cp -R ../DEBIAN .')
 
     # copy the desktop launcher
     os.system('cp ../openbazaar.desktop .' + APP_DIR)
@@ -177,7 +177,7 @@ def copy_files():
 def build_deb_package(packageName):
     '''builds the .deb'''
     assert_current_dir_is('ubuntu')
-    os.system('fakeroot dpkg -D1 -b output ' + packageName)
+    os.system('dpkg -D1 -b output ' + packageName)
 
 
 def build_rpm_package(packageName):
@@ -192,9 +192,7 @@ if __name__ == '__main__':
 
     cleanup()
     delete_previous_package(dotDebName)
-
     create_folder_structure()
     copy_files()
-
     build_deb_package(dotDebName)
     build_rpm_package(dotDebName)
