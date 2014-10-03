@@ -28,9 +28,6 @@ import random
 import hashlib
 
 
-ioloop.install()
-
-
 class TransportLayer(object):
     # Transport layer manages a list of peers
     def __init__(self, market_id, my_ip, my_port, my_guid, nickname=None):
@@ -264,11 +261,11 @@ class CryptoTransportLayer(TransportLayer):
         )
 
         self.listener.set_ok_msg({
-                    'type': 'ok',
-                    'senderGUID': self.guid,
-                    'pubkey': self.pubkey,
-                    'senderNick': self.nickname
-                })
+            'type': 'ok',
+            'senderGUID': self.guid,
+            'pubkey': self.pubkey,
+            'senderNick': self.nickname
+        })
         self.listener.listen()
 
     def start_ip_address_checker(self):

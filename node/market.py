@@ -15,16 +15,12 @@ import traceback
 
 from pybitcointools.main import privkey_to_pubkey
 import tornado
-from zmq.eventloop import ioloop
 
 import constants
 from crypto_util import makePrivCryptor
 from data_uri import DataURI
 from orders import Orders
 from protocol import proto_page, query_page
-
-
-ioloop.install()
 
 
 class Market(object):
@@ -197,8 +193,7 @@ class Market(object):
         self.settings = self.get_settings()
 
         seller = msg['Seller']
-        seller['seller_PGP'] = self.gpg.export_keys(
-                self.settings['PGPPubkeyFingerprint'])
+        seller['seller_PGP'] = self.gpg.export_keys(self.settings['PGPPubkeyFingerprint'])
         seller['seller_BTC_uncompressed_pubkey'] = self.settings['btc_pubkey']
         seller['seller_GUID'] = self.settings['guid']
         seller['seller_Bitmessage'] = self.settings['bitmessage']
@@ -458,15 +453,10 @@ class Market(object):
                           'contracts': my_contracts}}
 
         # Pass off to thread to keep GUI snappy
-        t = Thread(
-                target=self.transport.store(
-                    args=(
-                        contract_index_key,
-                        value,
-                        self.transport.guid
-                    )
-                )
-            )
+        t = Thread(target=self.transport.store,
+                   args=(contract_index_key,
+                         value,
+                         self.transport.guid))
         t.start()
 
     def remove_contract(self, msg):
