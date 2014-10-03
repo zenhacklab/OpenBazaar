@@ -148,6 +148,14 @@ class TransportLayer(object):
                     self.log.info("Error sending over peer!")
                     traceback.print_exc()
 
+    def store(self, *args, **kwargs):
+        """
+        Store or republish data.
+
+        Refer to the dht module (iterativeStore()) for further details.
+        """
+        self.dht.iterativeStore(*args, **kwargs)
+
     def broadcast_goodbye(self):
         self.log.info("Broadcast goodbye")
         msg = goodbye({'uri': self.uri})

@@ -176,8 +176,7 @@ class Market(object):
 
             self.log.debug("Sending keyword to network: %s", keyword_key)
 
-            self.transport.dht.iterativeStore(
-                self.transport,
+            self.transport.store(
                 keyword_key,
                 json.dumps({
                     'keyword_index_add': {
@@ -230,8 +229,7 @@ class Market(object):
         self.save_contract_to_db(contract_id, msg, signed_data, contract_key)
 
         # Store listing
-        self.transport.dht.iterativeStore(
-            self.transport,
+        self.transport.store(
             contract_key,
             str(signed_data),
             self.transport.guid)
@@ -349,8 +347,7 @@ class Market(object):
         """Update information about contracts in the network"""
         listings = self.db.selectEntries("contracts", {"deleted": 0})
         for listing in listings:
-            self.transport.dht.iterativeStore(
-                self.transport,
+            self.transport.store(
                 listing['key'],
                 listing.get('signed_contract_body'),
                 self.transport.guid
@@ -403,8 +400,7 @@ class Market(object):
 
         listing_key = listing['key']
 
-        self.transport.dht.iterativeStore(
-            self.transport,
+        self.transport.store(
             listing_key,
             listing.get('signed_contract_body'),
             self.transport.guid
@@ -421,7 +417,7 @@ class Market(object):
         #     hash_value.update('keyword-%s' % keyword)
         #     keyword_key = hash_value.hexdigest()
         #
-        #     self.transport.dht.iterativeStore(self.transport,
+        #     self.transport.store(
         #         keyword_key,
         #         json.dumps({'keyword_index_add': contract_key}),
         #         self.transport.guid)
@@ -463,12 +459,14 @@ class Market(object):
 
         # Pass off to thread to keep GUI snappy
         t = Thread(
-            target=self.transport.dht.iterativeStore,
-            args=(
-                self.transport,
-                contract_index_key,
-                value,
-                self.transport.guid,))
+                target=self.transport.store(
+                    args=(
+                        contract_index_key,
+                        value,
+                        self.transport.guid
+                    )
+                )
+            )
         t.start()
 
     def remove_contract(self, msg):
@@ -500,8 +498,7 @@ class Market(object):
             hash_value.update(keyword_key.encode('utf-8'))
             keyword_key = hash_value.hexdigest()
 
-            self.transport.dht.iterativeStore(
-                self.transport,
+            self.transport.store(
                 keyword_key,
                 json.dumps({
                     'keyword_index_remove': {
@@ -639,18 +636,11 @@ class Market(object):
             if msg['notary'] is True:
                 self.log.info('Letting the network know you are now a notary')
                 data = json.dumps({'notary_index_add': self.transport.guid})
-                self.transport.dht.iterativeStore(
-                    self.transport,
-                    key, data,
-                    self.transport.guid)
+                self.transport.store(key, data, self.transport.guid)
             else:
                 self.log.info('Letting the network know you are not a notary')
                 data = json.dumps({'notary_index_remove': self.transport.guid})
-                self.transport.dht.iterativeStore(
-                    self.transport,
-                    key,
-                    data,
-                    self.transport.guid)
+                self.transport.store(key, data, self.transport.guid)
 
         # Update nickname
         self.transport.nickname = msg['nickname']
