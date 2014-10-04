@@ -3,9 +3,6 @@ import logging
 import pybitcointools
 from threading import Thread
 
-# from twisted.internet import reactor
-
-
 _log = logging.getLogger('trust')
 
 TESTNET = False
@@ -95,8 +92,6 @@ def get_unspent(addr, callback):
     # def get_history():
     #     _log.debug("get_history called from thread")
     #     client.fetch_history(addr, history_fetched)
-
-    # reactor.callFromThread(get_history)
 
     def get_history():
 
