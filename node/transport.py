@@ -671,8 +671,7 @@ class CryptoTransportLayer(TransportLayer):
 
                     if routing_peer is None:
                         self.dht.routingTable.addContact(peer)
-                    else:
-                        routingPeer = peer
+                        routing_peer = peer
 
                     data['senderGUID'] = self.guid
                     data['pubkey'] = self.pubkey
