@@ -20,8 +20,6 @@ from crypto_util import (
 from guid import GUIDMixin
 import network_util
 
-ioloop.install()
-
 
 class PeerConnection(object):
     def __init__(self, transport, address, nickname=""):
@@ -97,7 +95,7 @@ class PeerConnection(object):
 class CryptoPeerConnection(GUIDMixin, PeerConnection):
 
     def __init__(self, transport, address, pub=None, guid=None, nickname="",
-            sin=None):
+                 sin=None):
 
         GUIDMixin.__init__(self, guid)
         PeerConnection.__init__(self, transport, address, nickname)
@@ -260,6 +258,7 @@ class CryptoPeerConnection(GUIDMixin, PeerConnection):
     def get_guid(self):
         return self.guid
 
+
 class PeerListener(object):
     def __init__(self, ip, port, ctx, data_cb):
         self.ip = ip
@@ -328,7 +327,7 @@ class PeerListener(object):
         )
 
         def handle_recv(messages):
-            #FIXME: investigate if we really get more than one messages here
+            # FIXME: investigate if we really get more than one messages here
             for msg in messages:
                 self._on_raw_message(msg)
 
@@ -355,6 +354,7 @@ class PeerListener(object):
             self.ctx.destroy(linger=None)
             self.is_listening = False
 
+
 class CryptoPeerListener(PeerListener):
 
     def __init__(self, ip, port, pubkey, secret, ctx, data_cb):
@@ -364,9 +364,9 @@ class CryptoPeerListener(PeerListener):
         self.pubkey = pubkey
         self.secret = secret
 
-        #fixme: refactor this mess
-        #this was copied as is from CryptoTransportLayer
-        #soon all crypto code will be refactored and this will be removed
+        # FIXME: refactor this mess
+        # this was copied as is from CryptoTransportLayer
+        # soon all crypto code will be refactored and this will be removed
         self._myself = ec.ECC(
             pubkey=pubkey_to_pyelliptic(self.pubkey).decode('hex'),
             raw_privkey=self.secret.decode('hex'),

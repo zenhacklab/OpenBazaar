@@ -2,6 +2,7 @@
 A module to deal with identity management.
 """
 
+
 class GUIDMixin(object):
     """
     An interface for a GUID.

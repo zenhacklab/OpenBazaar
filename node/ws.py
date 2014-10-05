@@ -16,12 +16,9 @@ from pybitcointools import (
     scriptaddr
 )
 import tornado.websocket
-from zmq.eventloop import ioloop
 from twisted.internet import reactor
 from backuptool import BackupTool, Backup, BackupJSONEncoder
 import trust
-
-ioloop.install()
 
 
 class ProtocolHandler(object):
@@ -514,10 +511,8 @@ class ProtocolHandler(object):
                 client.fetch_history(multi_address, lambda ec, history, order=order: cb(ec, history, order))
 
             reactor.callFromThread(get_history)
-
         except Exception as e:
             self.log.error('%s' % e)
-
 
     def client_release_payment(self, socket_handler, msg):
         self.log.info('Releasing payment to Merchant %s' % msg)

@@ -77,6 +77,7 @@ def uri_parts(uri):
     else:
         raise RuntimeError('URI is not valid')
 
+
 def get_my_ip():
     try:
         r = requests.get('https://icanhazip.com')
@@ -85,9 +86,11 @@ def get_my_ip():
         print '[Requests] error: %s' % e
     return None
 
+
 def is_ipv6_address(ip):
     address = IPint(ip)
     return address.version == 6
+
 
 def get_peer_url(address, port):
     """
@@ -99,13 +102,13 @@ def get_peer_url(address, port):
     @param port: the port that will be used to connect to the peer
     """
     try:
-        #is_ipv6_address will throw an exception for a DNS name
+        # is_ipv6_address will throw an exception for a DNS name
         is_ipv6 = is_ipv6_address(address)
-    except  ValueError:
+    except ValueError:
         is_ipv6 = False
 
     if is_ipv6:
-        #an IPv6 address must be enclosed in brackets
+        # an IPv6 address must be enclosed in brackets
         return 'tcp://[%s]:%s' % (address, port)
     else:
         return 'tcp://%s:%s' % (address, port)
