@@ -357,7 +357,7 @@ class Market(object):
             contract = listing.get('Contract')
             keywords = contract.get('item_keywords') if contract is not None else []
 
-            t3 = Thread(target=self.update_keywords_on_network, args=(listings.get('key'), keywords,))
+            t3 = Thread(target=self.update_keywords_on_network, args=(listing.get('key'), keywords,))
             t3.start()
 
         # Updating the DHT index of your store's listings
