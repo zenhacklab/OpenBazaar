@@ -442,7 +442,7 @@ class OptimizedTreeRoutingTable(TreeRoutingTable):
 
         bucketIndex = self.kbucketIndex(contact.guid)
 
-        old_contact = self.buckets[bucketIndex].getContact(contact)
+        old_contact = self.buckets[bucketIndex].getContact(contact.guid)
 
         if not old_contact:
 
