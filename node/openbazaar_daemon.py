@@ -9,8 +9,6 @@ from market import Market
 from ws import WebSocketHandler
 import logging
 import signal
-from threading import Thread
-from twisted.internet import reactor
 from util import open_default_webbrowser
 from network_util import get_random_free_tcp_port
 import upnp
@@ -57,8 +55,6 @@ class MarketApplication(tornado.web.Application):
 
         peers = seed_peers if seed_mode == 0 else []
         self.transport.join_network(peers)
-
-        Thread(target=reactor.run, args=(False,)).start()
 
         handlers = [
             (r"/", MainHandler),

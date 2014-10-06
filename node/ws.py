@@ -16,7 +16,7 @@ from pybitcointools import (
     scriptaddr
 )
 import tornado.websocket
-from twisted.internet import reactor
+from threading import Thread
 from backuptool import BackupTool, Backup, BackupJSONEncoder
 import trust
 
@@ -510,7 +510,7 @@ class ProtocolHandler(object):
             def get_history():
                 client.fetch_history(multi_address, lambda ec, history, order=order: cb(ec, history, order))
 
-            reactor.callFromThread(get_history)
+            Thread(target=get_history).start()
         except Exception as e:
             self.log.error('%s' % e)
 
@@ -625,7 +625,7 @@ class ProtocolHandler(object):
                     lambda ec, history, order=order: cb(ec, history, order)
                 )
 
-            reactor.callFromThread(get_history)
+            Thread(target=get_history).start()
 
         except Exception as e:
             self.log.error('%s' % e)
@@ -728,7 +728,7 @@ class ProtocolHandler(object):
                     lambda ec, history, order=order: cb(ec, history, order)
                 )
 
-            reactor.callFromThread(get_history)
+            Thread(target=get_history).start()
 
         except Exception as e:
             self.log.error('%s' % e)
