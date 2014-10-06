@@ -450,7 +450,7 @@ class CryptoTransportLayer(TransportLayer):
         self.secret = hashlib.sha256(secret).hexdigest()
         self.pubkey = privtopub(self.secret)
         self.privkey = random_key()
-        print 'PRIVATE KEY: ', self.privkey
+        # print 'PRIVATE KEY: ', self.privkey
         self.btc_pubkey = privtopub(self.privkey)
         print 'PUBLIC KEY: ', self.btc_pubkey
 
