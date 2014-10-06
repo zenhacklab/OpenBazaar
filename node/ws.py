@@ -382,7 +382,7 @@ class ProtocolHandler(object):
         self.send_to_client(None, {"type": "orderinfo", "order": order})
 
     def client_update_settings(self, socket_handler, msg):
-        self.log.info("Updating settings: %s" % msg)
+        # self.log.info("Updating settings: %s" % msg)
         self.send_to_client(None, {"type": "settings", "values": msg})
         if msg['settings'].get('btc_pubkey'):
             del msg['settings']['btc_pubkey']

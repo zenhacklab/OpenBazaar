@@ -443,14 +443,14 @@ class CryptoTransportLayer(TransportLayer):
             curve='secp256k1'
         )
 
-        self.log.debug('Retrieved Settings: \n%s', pformat(self.settings))
+        # self.log.debug('Retrieved Settings: \n%s', pformat(self.settings))
 
     def _generate_new_keypair(self):
         secret = str(random.randrange(2 ** 256))
         self.secret = hashlib.sha256(secret).hexdigest()
         self.pubkey = privtopub(self.secret)
         self.privkey = random_key()
-        print 'PRIVATE KEY: ', self.privkey
+        # print 'PRIVATE KEY: ', self.privkey
         self.btc_pubkey = privtopub(self.privkey)
         print 'PUBLIC KEY: ', self.btc_pubkey
 
