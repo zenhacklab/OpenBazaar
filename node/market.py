@@ -614,7 +614,7 @@ class Market(object):
 
     def save_settings(self, msg):
         """Update local settings"""
-        self.log.debug("Settings to save %s", msg)
+        # self.log.debug("Settings to save %s", msg)
 
         # Check for any updates to arbiter or notary status to push to the DHT
         if 'notary' in msg:
@@ -671,7 +671,7 @@ class Market(object):
         settings['btc_pubkey'] = privkey_to_pubkey(settings.get('privkey'))
         settings['secret'] = settings.get('secret')
 
-        self.log.info("SETTINGS: %s", settings)
+        # self.log.info("SETTINGS: %s", settings)
 
         if settings:
             return settings

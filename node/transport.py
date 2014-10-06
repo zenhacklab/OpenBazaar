@@ -443,7 +443,7 @@ class CryptoTransportLayer(TransportLayer):
             curve='secp256k1'
         )
 
-        self.log.debug('Retrieved Settings: \n%s', pformat(self.settings))
+        # self.log.debug('Retrieved Settings: \n%s', pformat(self.settings))
 
     def _generate_new_keypair(self):
         secret = str(random.randrange(2 ** 256))
