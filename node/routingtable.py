@@ -183,8 +183,7 @@ class TreeRoutingTable(RoutingTable):
                     def replaceContact(failure):
                         """Callback for the deferred PING RPC to see if the
                            head node in the k-bucket is still responding
-
-                           @type failure: twisted.python.failure.Failure"""
+                           """
                         failure.trap(TimeoutError)
                         print '==replacing contact=='
                         # Remove the old contact...

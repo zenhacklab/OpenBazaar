@@ -690,12 +690,6 @@ class DHT(object):
 
         @param key: the 160-bit key (i.e. the node or value ID) to search for
         @type key: str
-
-        @return: This immediately returns a deferred object, which will return
-                 a list of k "closest" contacts (C{kademlia.contact.Contact}
-                 objects) to the specified key as soon as the operation is
-                 finished.
-        @rtype: twisted.internet.defer.Deferred
         """
         self.log.info('Looking for node at: %s' % key)
         self._iterativeFind(key, [], callback=callback)
