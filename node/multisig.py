@@ -1,13 +1,10 @@
 import logging
-
-from twisted.internet import reactor
+import random
+import re
+import urllib2
 
 import obelisk
-import urllib2
-import re
-import random
 # import pybitcointools
-
 
 # Create new private key:
 #
@@ -287,7 +284,6 @@ def main():
         "1Fufjpf9RM2aQsGedhSpbSCGRHrmLMJ7yY",
         finished_msig
     )
-    reactor.run()
 
 if __name__ == "__main__":
     main()
