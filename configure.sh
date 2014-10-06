@@ -102,7 +102,6 @@ function installMac {
 
   #install python deps inside our virtualenv
   ./env/bin/pip install -r requirements.txt
-  ./env/bin/pip install ./pysqlcipher
 
   doneMessage
 }
@@ -130,7 +129,6 @@ function installUbuntu {
     virtualenv env
   fi
 
-  ./env/bin/pip install ./pysqlcipher
   ./env/bin/pip install -r requirements.txt
 
   doneMessage
@@ -148,7 +146,6 @@ function installArch {
     virtualenv2 env
   fi
 
-  ./env/bin/pip install ./pysqlcipher
   ./env/bin/pip install -r requirements.txt
 
   doneMessage
@@ -205,9 +202,6 @@ function installPortage {
   # FIXME: on gentoo install as user, because otherwise
   # /usr/lib/python-exec/python-exec* gets overwritten by nose,
   # killing most Python programs.
-  pushd pysqlcipher
-  python2.7 setup.py install --user
-  popd
   pip install --user -r requirements.txt
   doneMessage
 }
@@ -227,7 +221,6 @@ function installFedora {
     virtualenv env
   fi
 
-  ./env/bin/pip install ./pysqlcipher
   ./env/bin/pip install -r requirements.txt
 
   doneMessage

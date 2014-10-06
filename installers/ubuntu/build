@@ -149,12 +149,10 @@ def copy_files():
     # in our project because their pip scripts fail.
     os.system('cp -R ' + OB_PROJECT_DIR + '/node .' + USR_SHARE_OB_DIR + '/')
     os.system('cp -R ' + OB_PROJECT_DIR + '/html .' + USR_SHARE_OB_DIR + '/')
-    os.system('cp -R ' + OB_PROJECT_DIR + '/pysqlcipher .' + USR_SHARE_OB_DIR + '/')
 
     # fix permissions to avoid lintian errors
     os.system('chmod -R 0644 .' + USR_SHARE_OB_DIR + '/node')
     os.system('chmod -R 0644 .' + USR_SHARE_OB_DIR + '/html')
-    os.system('chmod -R 0644 .' + USR_SHARE_OB_DIR + '/pysqlcipher')
     os.system('find .' + USR_SHARE_OB_DIR + ' -type d | xargs chmod 0755')
     os.system('find .' + USR_SHARE_OB_DIR + ' | egrep "(\.sh)" | xargs chmod 0755')
 
