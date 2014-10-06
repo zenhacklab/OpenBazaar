@@ -408,7 +408,7 @@ class DHT(object):
                 # This node is the original publisher; it has to republish
                 # the data before it expires (24 hours in basic Kademlia)
                 if age >= constants.dataExpireTimeout:
-                    self.iterativeStore(self.transport, key, self.dataStore[key])
+                    self.iterativeStore(key, self.dataStore[key])
 
             else:
                 # This node needs to replicate the data at set intervals,
@@ -419,7 +419,7 @@ class DHT(object):
                     # - remove it
                     expiredKeys.append(key)
                 elif now - self.dataStore.lastPublished(key) >= constants.replicateInterval:
-                    self.iterativeStore(self.transport, key, self.dataStore[key], originalPublisherID, age)
+                    self.iterativeStore(key, self.dataStore[key], originalPublisherID, age)
 
         for key in expiredKeys:
             del self.dataStore[key]
@@ -506,7 +506,7 @@ class DHT(object):
         # self.iterativeFindNode(key, lambda msg, key=key, value=value, originalPublisherID=originalPublisherID,
         # age=age: self.storeKeyValue(msg, key, value, originalPublisherID, age))
 
-    def iterativeStore(self, transport, key, value_to_store=None, originalPublisherID=None, age=0):
+    def iterativeStore(self, key, value_to_store=None, originalPublisherID=None, age=0):
         """ The Kademlia store operation
 
         Call this to store/republish data in the DHT.
