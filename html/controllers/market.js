@@ -69,6 +69,17 @@ angular.module('app')
             if(!listeners.hasOwnProperty('burn_info_available')) {
                 Connection.$on('burn_info_available', function(e, msg){ $scope.parse_burn_info(msg); });
             }
+            if(!listeners.hasOwnProperty('hello')) {
+                Connection.$on('hello', function(e, msg){
+                    console.log('Received a hello', msg);
+                    $scope.add_peer({
+                       'guid': msg.senderGUID,
+                       'uri': msg.uri,
+                       'pubkey': msg.pubkey,
+                       'nick': msg.senderNick
+                    });
+                });
+            }
 
             // Listen for Sidebar mods
             $scope.$on('sidebar', function(event, visible) {
@@ -313,13 +324,12 @@ angular.module('app')
                     function(previousValue, currentValue, index, array) {
                         return currentValue.uri == msg.uri ? index : previousValue;
                     });
+                console.log('Index', index);
 
                 if (index == -1) {
                     /* it is a new peer */
                     $scope.peers.push(msg);
-                } else {
-                    $scope.peers[index] = msg;
-                }
+                } 
                 if (!$scope.$$phase) {
                     $scope.$apply();
                 }

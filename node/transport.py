@@ -643,7 +643,7 @@ class CryptoTransportLayer(TransportLayer):
         if send_to is not None:
 
             peer = self.dht.routingTable.getContact(send_to)
-            if not peer:
+            if peer is None:
                 for activePeer in self.dht.activePeers:
                     if activePeer.guid == send_to:
                         peer = activePeer
@@ -664,14 +664,19 @@ class CryptoTransportLayer(TransportLayer):
 
             for peer in self.dht.activePeers:
                 try:
-                    peer = self.dht.routingTable.getContact(peer.guid)
+                    routing_peer = self.dht.routingTable.getContact(peer.guid)
+
+                    if routing_peer is None:
+                        self.dht.routingTable.addContact(peer)
+                        routing_peer = peer
+
                     data['senderGUID'] = self.guid
                     data['pubkey'] = self.pubkey
 
                     def cb(msg):
                         self.log.debug('Message Back: \n%s' % pformat(msg))
 
-                    peer.send(data, cb)
+                    routing_peer.send(data, cb)
 
                 except:
                     self.log.info("Error sending over peer!")
