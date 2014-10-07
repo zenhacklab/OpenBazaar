@@ -14,7 +14,6 @@ sudo rm -fr logs
 echo "[openbazaar] Cleaning up post installation binaries and resources..."
 sudo rm -fr node/*
 sudo rm -fr html/*
-sudo rm -fr pysqlcipher
 
 echo "[openbazaar] Done cleaning."
 

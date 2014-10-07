@@ -2,10 +2,6 @@
 set -e
 echo "[openbazaar] Installing OpenBazaar python dependencies..."
 
-pushd /usr/share/openbazaar/pysqlcipher
-sudo python setup.py install
-popd
-
 pushd /usr/share/openbazaar
 sudo pip install -r requirements.txt
 popd
