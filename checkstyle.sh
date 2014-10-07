@@ -20,8 +20,7 @@ function python_check() {
     for file in $(find . -name "*.py" \
         -not -path "./env/*" \
         -not -path "./html/bower_components/*" \
-        -not -path "./pybitmessage/*" \
-        -not -path "./pysqlcipher/*"); do
+        -not -path "./pybitmessage/*"); do
         if ! $PYLINT --rcfile .pylintrc $file; then
             ERR=true
         fi
