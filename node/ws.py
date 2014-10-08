@@ -31,17 +31,28 @@ class ProtocolHandler(object):
 
         self.transport.set_websocket_handler(self)
 
+        self.all_messages = (
+            'peer',
+            'page',
+            'peer_remove',
+            'node_page',
+            'listing_results',
+            'listing_result',
+            'no_listing_result',
+            'release_funds_tx',
+            'all'
+        )
+
         # register on transport events to forward..
         self.transport.add_callbacks([
-            ('peer', self.on_node_peer),
-            ('page', self.on_page),
-            ('peer_remove', self.on_node_remove_peer),
-            ('node_page', self.on_node_page),
-            ('listing_results', self.on_listing_results),
-            ('listing_result', self.on_listing_result),
-            ('no_listing_result', self.on_no_listing_result),
-            ('release_funds_tx', self.on_release_funds_tx),
-            ('all', self.on_node_message)
+            (
+                msg,
+                {
+                    'cb': getattr(self, 'on_%s' % msg),
+                    'validator_cb': getattr(self, 'validate_on_%s' % msg)
+                }
+            )
+            for msg in self.all_messages
         ])
 
         # handlers from events coming from websocket, we shouldnt need this
@@ -93,6 +104,11 @@ class ProtocolHandler(object):
         self.log = logging.getLogger(
             '[%s] %s' % (self.transport.market_id, self.__class__.__name__)
         )
+
+    def validate_on_page(self, *data):
+        self.log.debug('Validating on page message.')
+        keys = ("senderGUID", "sin")
+        return all(k in data for k in keys)
 
     def on_page(self, page):
 
@@ -182,6 +198,10 @@ class ProtocolHandler(object):
         self.send_to_client(None, {"type": "log_output", "line": data})
         self.stream.read_until("\n", self.line_from_nettail)
 
+    def validate_on_listing_results(self, *data):
+        self.log.debug('Validating on listing results message.')
+        return "contracts" in data
+
     def on_listing_results(self, msg):
         self.log.debug('Found results %s' % msg)
         self.send_to_client(None, {
@@ -189,11 +209,19 @@ class ProtocolHandler(object):
             "products": msg['contracts']
         })
 
+    def validate_on_no_listing_result(self, *data):
+        self.log.debug('Validating on no listing result message.')
+        return True
+
     def on_no_listing_result(self, msg):
         self.log.debug('No listings found')
         self.send_to_client(None, {
             "type": "no_listings_found"
         })
+
+    def validate_on_listing_result(self, *data):
+        self.log.debug('Validating on listing result message.')
+        return True
 
     def on_listing_result(self, msg):
         self.log.debug('Found result %s' % msg)
@@ -630,6 +658,11 @@ class ProtocolHandler(object):
         except Exception as e:
             self.log.error('%s' % e)
 
+    def validate_on_release_funds_tx(self, *data):
+        self.log.debug('Validating on release funds tx message.')
+        keys = ("senderGUID", "buyer_order_id", "script", "tx")
+        return all(k in data for k in keys)
+
     def on_release_funds_tx(self, msg):
         self.log.info('Receiving signed tx from buyer')
 
@@ -999,13 +1032,17 @@ class ProtocolHandler(object):
             })
         else:
             # Add peer to list of markets
-            self.on_node_peer(results[0])
+            self.on_peer(results[0])
 
             # Load page for the store
             self.market.query_page(results[0].guid)
 
+    def validate_on_peer(self, *data):
+        self.log.debug('Validating on node peer message.')
+        return "address" in data
+
     # messages coming from "the market"
-    def on_node_peer(self, peer):
+    def on_peer(self, peer):
         self.log.info("Add peer: %s" % peer)
 
         response = {'type': 'peer',
@@ -1018,13 +1055,25 @@ class ProtocolHandler(object):
                     'uri': peer.address}
         self.send_to_client(None, response)
 
-    def on_node_remove_peer(self, msg):
+    def validate_on_peer_remove(self, *data):
+        self.log.debug('Validating on node remove peer message.')
+        return True
+
+    def on_peer_remove(self, msg):
         self.send_to_client(None, msg)
+
+    def validate_on_node_page(self, *data):
+        self.log.debug('Validating on node page message.')
+        return True
 
     def on_node_page(self, page):
         self.send_to_client(None, page)
 
-    def on_node_message(self, *args):
+    def validate_on_all(self, *data):
+        self.log.debug('Validating on node message.')
+        return True
+
+    def on_all(self, *args):
         first = args[0]
         if isinstance(first, dict):
             self.send_to_client(None, first)

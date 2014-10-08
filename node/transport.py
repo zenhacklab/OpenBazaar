@@ -71,13 +71,15 @@ class TransportLayer(object):
 
         # Run all callbacks in specified section
         for cb in self.callbacks[section]:
-            cb(*data)
+            if cb['validator_cb'](*data):
+                cb['cb'](*data)
 
         # Run all callbacks registered under the 'all' section. Don't duplicate
         # calls if the specified section was 'all'.
         if not section == 'all':
             for cb in self.callbacks['all']:
-                cb(*data)
+                if cb['validator_cb'](*data):
+                    cb['cb'](*data)
 
     def get_profile(self):
         return hello_request({'uri': self.uri})
@@ -232,6 +234,13 @@ class CryptoTransportLayer(TransportLayer):
         self.nickname = ""
         self._dev_mode = dev_mode
 
+        self.all_messages = (
+            'hello',
+            'findNode',
+            'findNodeResponse',
+            'store'
+        )
+
         # Set up
         self._setup_settings()
 
@@ -250,10 +259,17 @@ class CryptoTransportLayer(TransportLayer):
             self.start_ip_address_checker()
 
     def start_listener(self):
-        self.add_callbacks([('hello', self._ping),
-                            ('findNode', self._find_node),
-                            ('findNodeResponse', self._find_node_response),
-                            ('store', self._store_value)])
+
+        self.add_callbacks([
+            (
+                msg,
+                {
+                    'cb': getattr(self, 'on_%s' % msg),
+                    'validator_cb': getattr(self, 'validate_on_%s' % msg)
+                }
+            )
+            for msg in self.all_messages
+        ])
 
         self.listener = connection.CryptoPeerListener(
             self.ip, self.port, self.pubkey, self.secret, self.ctx,
@@ -353,7 +369,11 @@ class CryptoTransportLayer(TransportLayer):
     # def get_myself(self):
     #     return self._myself
 
-    def _ping(self, msg):
+    def validate_on_hello(self, msg):
+        self.log.debug('Validating ping message.')
+        return True
+
+    def on_hello(self, msg):
 
         self.log.info('Pinged %s ' % json.dumps(msg, ensure_ascii=False))
         #
@@ -366,13 +386,25 @@ class CryptoTransportLayer(TransportLayer):
         #      "pubkey": self.pubkey,
         #     }))
 
-    def _store_value(self, msg):
+    def validate_on_store(self, msg):
+        self.log.debug('Validating store value message.')
+        return True
+
+    def on_store(self, msg):
         self.dht._on_storeValue(msg)
 
-    def _find_node(self, msg):
+    def validate_on_findNode(self, msg):
+        self.log.debug('Validating find node message.')
+        return True
+
+    def on_findNode(self, msg):
         self.dht.on_find_node(msg)
 
-    def _find_node_response(self, msg):
+    def validate_on_findNodeResponse(self, msg):
+        self.log.debug('Validating find node response message.')
+        return True
+
+    def on_findNodeResponse(self, msg):
         self.dht.on_findNodeResponse(self, msg)
 
     def _setup_settings(self):
