@@ -419,7 +419,7 @@ class CryptoPeerListener(PeerListener):
                 self.log.info(
                     "Decrypted Message [%s]" % msg.get('type', 'unknown')
                 )
-            except:
+            except Exception:
                 self.log.error("Could not decrypt message: %s" % msg)
 
                 return

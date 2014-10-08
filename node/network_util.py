@@ -13,7 +13,7 @@ def is_local_tcp_port_listening(port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         r = s.connect_ex(('127.0.01', port))
         s.close()
-    except:
+    except Exception:
         pass
     return r == 0
 

@@ -127,7 +127,7 @@ class Multisig(object):
         except Exception as e:
             try:
                 p = e.read().strip()
-            except:
+            except Exception:
                 p = e
             raise Exception(p)
 

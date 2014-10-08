@@ -124,7 +124,7 @@ class MongoDataStore(DataStore):
             db_keys = self.db.selectEntries("datastore")
             for row in db_keys:
                 keys.append(row['key'].decode('hex'))
-        except:
+        except Exception:
             pass
         return keys
 
@@ -216,7 +216,7 @@ class MongoDataStore(DataStore):
             value = row[0][columnName]
             try:
                 value = ast.literal_eval(value)
-            except:
+            except Exception:
                 pass
             return value
 
@@ -241,7 +241,7 @@ class SqliteDataStore(DataStore):
             db_keys = self.db.selectEntries("datastore")
             for row in db_keys:
                 keys.append(row['key'].decode('hex'))
-        except:
+        except Exception:
             pass
         return keys
 
@@ -333,7 +333,7 @@ class SqliteDataStore(DataStore):
             value = row[0][columnName]
             try:
                 value = ast.literal_eval(value)
-            except:
+            except Exception:
                 pass
             return value
 

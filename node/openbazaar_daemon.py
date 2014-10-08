@@ -192,7 +192,7 @@ def start_node(my_market_ip,
         try:
             application.listen(http_port, http_ip)
             error = False
-        except:
+        except Exception:
             http_port += 1
 
     if not disable_upnp:
