@@ -35,7 +35,7 @@ class PortMapper(object):
         try:
             self.debug('local ip address :', self.upnp.lanaddr)
             self.debug('external ip address :', self.upnp.externalipaddress())
-        except:
+        except Exception:
             pass
 
     def __init__(self):
@@ -65,7 +65,7 @@ class PortMapper(object):
         result = 'n/a'
         try:
             result = self.upnp.statusinfo()
-        except:
+        except Exception:
             pass
 
         return result
@@ -74,7 +74,7 @@ class PortMapper(object):
         result = 'n/a'
         try:
             result = self.upnp.connectiontype()
-        except:
+        except Exception:
             pass
         return result
 
@@ -111,7 +111,7 @@ class PortMapper(object):
                     PortMapper.OPEN_BAZAAR_DESCRIPTION + ' (' + protocol + ')',
                     ''
                 )
-            except:
+            except Exception:
                 # ConflictInMappingEntry
                 result = False
 
@@ -129,7 +129,7 @@ class PortMapper(object):
                     )
                 )
                 self.debug(result)
-            except:
+            except Exception:
                 self.debug(
                     "Could not delete mapping on port %d protocol %s" % (
                         port, protocol
@@ -172,7 +172,7 @@ class PortMapper(object):
                     self.debug('delete_port_mapping -> Found:', str(m))
                     try:
                         self.delete_port_mapping(m.port, m.protocol)
-                    except:
+                    except Exception:
                         pass
 
 

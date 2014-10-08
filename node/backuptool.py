@@ -38,7 +38,7 @@ class BackupTool(object):
 
         try:
             os.makedirs(backupFolderPath)
-        except:
+        except Exception:
             # folder might already exist, no biggie
             pass
 
@@ -134,7 +134,7 @@ class Backup(json.JSONEncoder):
                             backup_file_path,
                             created_timestamp,
                             size_in_bytes)
-        except:
+        except Exception:
             pass
         return result
 

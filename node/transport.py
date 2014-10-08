@@ -141,7 +141,7 @@ class TransportLayer(object):
                         print msg
                     peer.send(data, cb)
 
-                except:
+                except Exception:
                     self.log.info("Error sending over peer!")
                     traceback.print_exc()
 
@@ -678,7 +678,7 @@ class CryptoTransportLayer(TransportLayer):
 
                     routing_peer.send(data, cb)
 
-                except:
+                except Exception:
                     self.log.info("Error sending over peer!")
                     traceback.print_exc()
 

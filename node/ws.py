@@ -818,7 +818,7 @@ class ProtocolHandler(object):
                                            'result': 'success',
                                            'backups': backups
                                            })
-            except:
+            except Exception:
                 self.send_to_client(None, {'type': 'on_get_backups_response',
                                            'result': 'failure'})
 
@@ -929,7 +929,7 @@ class ProtocolHandler(object):
 
                 self.log.error('Could not verify signature of contract.')
 
-        except:
+        except Exception:
             self.log.debug('Error getting JSON contract')
 
     def on_global_search_value(self, results, key):
@@ -986,7 +986,7 @@ class ProtocolHandler(object):
                 else:
                     self.log.error('Could not verify signature of contract.')
 
-            except:
+            except Exception:
                 self.log.debug('Error getting JSON contract')
         else:
             self.log.info('No results')
@@ -1123,7 +1123,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         with WebSocketHandler.listen_lock:
             try:
                 self.listeners.remove(self)
-            except:
+            except Exception:
                 self.log.error('Cannot remove socket listener')
 
     @staticmethod
@@ -1136,7 +1136,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.log.info('[On Message]: %s' % message)
         try:
             request = json.loads(message)
-        except:
+        except Exception:
             logging.error("Error decoding message: %s", message, exc_info=True)
 
         # Check request is correctly formed.
@@ -1163,5 +1163,5 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         try:
             # calling write_message or the socket is not thread safe
             self.loop.current().add_callback(send_response)
-        except:
+        except Exception:
             logging.error("Error adding callback", exc_info=True)
