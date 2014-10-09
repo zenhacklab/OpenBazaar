@@ -26,8 +26,9 @@ class Obdb(object):
 
         if not self.disable_sqlite_crypt:
             # Use PRAGMA key to encrypt / decrypt database.
-            cur = self.con.cursor()
-            cur.execute("PRAGMA key = 'passphrase';")
+            with self.con:
+                cur = self.con.cursor()
+                cur.execute("PRAGMA key = 'passphrase';")
 
     def _disconnectFromDb(self):
         """ Close the db connection
